@@ -1,0 +1,7 @@
+<Files ~ "^(auth|config)\.php$">
+    Require all denied
+</Files>
+
+# Proteksi file sensitif: konfigurasi database dan file otentikasi
+# Hanya file-file ini yang diblokir dari akses langsung via HTTP browser
+# Akses via require_once (seperti login.php termasuk auth.php) tetap diizinkan

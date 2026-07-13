@@ -1,0 +1,28 @@
+RewriteEngine On
+
+# Canonical homepage: /index.php -> /
+RewriteCond %{THE_REQUEST} \s/+(.*/)?index\.php[?\s] [NC]
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteRule ^index\.php$ ./ [R=302,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?index\.php[?\s] [NC]
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteRule ^(.+)/index\.php$ $1/ [R=302,L,NE]
+
+# Hide .php in browser URLs for normal page visits.
+# POST requests are not redirected, so form submissions keep their payload.
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[?\s] [NC]
+RewriteCond %{REQUEST_METHOD} !POST
+RewriteRule ^(.+?)\.php$ $1 [R=302,L,NE]
+
+# Serve real files and directories normally.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Extensionless PHP routes, including admin routes.
+# Example: /admin/berita?action=add -> /admin/berita.php?action=add
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+?)/?$ $1.php [L,QSA]
+
+# Pretty news URLs: /judul-berita -> detail.php?slug=judul-berita
+RewriteRule ^([A-Za-z0-9-]+)/?$ detail.php?slug=$1 [L,QSA]

@@ -1,0 +1,16 @@
+# Mencegah eksekusi PHP di folder upload
+<FilesMatch "\.(php|php\d?|phtml|pl|py|jsp|asp|aspx|cgi|shtml)$">
+    Require all denied
+</FilesMatch>
+
+# Cegah akses file hidden
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Hanya izinkan tipe file gambar
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !\.(jpg|jpeg|png|gif|webp|svg|ico)$ [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
