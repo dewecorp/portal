@@ -1,0 +1,16 @@
+# Deployment
+deploy.bat
+deploy.php
+
+# Backup folder
+backup/
+
+# System
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+.qoder/
+.agents/
