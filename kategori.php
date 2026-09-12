@@ -3,43 +3,52 @@ require_once __DIR__ . '/config.php';
 
 $kategoriId = isset($_GET['kategori']) ? (int)$_GET['kategori'] : 0;
 $kategoriSlug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+$kategori = null;
 
 // Try to fetch category by ID or slug
 if ($kategoriId > 0) {
-    $stmtKategori = $conn->prepare("SELECT id, nama, slug, grid_count, grid_style FROM kategori WHERE id = ?");
+    $stmtKategori = $conn->prepare("SELECT id, nama, slug, grid_count, grid_style, animasi FROM kategori WHERE id = ?");
     $stmtKategori->bind_param('i', $kategoriId);
-} elseif (!empty($kategoriSlug)) {
-    $stmtKategori = $conn->prepare("SELECT id, nama, slug, grid_count, grid_style FROM kategori WHERE slug = ?");
-    $stmtKategori->bind_param('s', $kategoriSlug);
-} else {
-    $kategori = null;
-}
-
-if (isset($stmtKategori)) {
     $stmtKategori->execute();
-    $kategoriResult = $stmtKategori->get_result();
-    $kategori = $kategoriResult->fetch_assoc();
+    $kategori = $stmtKategori->get_result()->fetch_assoc();
+    $stmtKategori->close();
+} elseif ($kategoriSlug !== '') {
+    $stmtKategori = $conn->prepare("SELECT id, nama, slug, grid_count, grid_style, animasi FROM kategori WHERE slug = ?");
+    $stmtKategori->bind_param('s', $kategoriSlug);
+    $stmtKategori->execute();
+    $kategori = $stmtKategori->get_result()->fetch_assoc();
     $stmtKategori->close();
 }
 
-// Set dynamic page title
 if ($kategori) {
-    $pageTitle = htmlspecialchars($kategori['nama'] . ' - ' . ($settings['site_name'] ?? 'Portal Berita'));
+    $kategoriId = (int)$kategori['id'];
+    $pageTitle = $kategori['nama'] . ' - ' . ($settings['site_name'] ?? 'Portal Berita');
 } else {
-    $pageTitle = 'Kategori Tidak Ditemukan - ' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita');
+    $pageTitle = 'Kategori Tidak Ditemukan - ' . ($settings['site_name'] ?? 'Portal Berita');
 }
 
 $berita = [];
+$totalBerita = 0;
+$halaman = max(1, (int)($_GET['hal'] ?? 1));
+$perHal = 12;
 
 if ($kategori) {
-    $gridCount = (int)($kategori['grid_count'] ?? 12);
+    $perHal = max(4, min(50, (int)($kategori['grid_count'] ?? 12)));
+    $cntStmt = $conn->prepare("SELECT COUNT(*) AS jml FROM berita WHERE kategori_id = ? AND status = 'publish'");
+    $cntStmt->bind_param('i', $kategoriId);
+    $cntStmt->execute();
+    $totalBerita = (int)($cntStmt->get_result()->fetch_assoc()['jml'] ?? 0);
+    $cntStmt->close();
+    $totalHal = max(1, (int)ceil($totalBerita / $perHal));
+    $halaman = min($halaman, $totalHal);
+    $offset = ($halaman - 1) * $perHal;
     $stmt = $conn->prepare("SELECT b.*, k.nama AS kategori_nama
                             FROM berita b
                             LEFT JOIN kategori k ON k.id = b.kategori_id
                             WHERE b.kategori_id = ? AND b.status = 'publish'
                             ORDER BY b.tanggal_publikasi DESC, b.id DESC
-                            LIMIT ?");
-    $stmt->bind_param('ii', $kategoriId, $gridCount);
+                            LIMIT ? OFFSET ?");
+    $stmt->bind_param('iii', $kategoriId, $perHal, $offset);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -60,7 +69,12 @@ include __DIR__ . '/header.php';
     </div>
 <?php else: ?>
     <!-- Category Header -->
-    <div class="mb-8">
+    <div class="mb-8" data-animate="fade-up">
+        <nav class="ml-4 mb-3 text-xs font-semibold text-slate-400">
+            <a href="index" class="hover:text-purple-600">Beranda</a>
+            <span class="mx-1">/</span>
+            <span class="text-slate-600"><?php echo htmlspecialchars($kategori['nama']); ?></span>
+        </nav>
         <div class="flex items-center gap-3 mb-2">
             <div class="h-10 w-1.5 rounded-full bg-gradient-to-b from-purple-600 to-blue-600"></div>
             <h1 class="text-3xl md:text-4xl font-black text-slate-900">
@@ -68,7 +82,8 @@ include __DIR__ . '/header.php';
             </h1>
         </div>
         <p class="text-slate-600 ml-4">
-            Menampilkan <?php echo count($berita); ?> berita
+            Menampilkan <?php echo count($berita); ?> dari <?php echo number_format($totalBerita); ?> berita
+            <?php if (($totalHal ?? 1) > 1): ?> &bull; Halaman <?php echo $halaman; ?> dari <?php echo $totalHal; ?><?php endif; ?>
         </p>
     </div>
 
@@ -82,22 +97,55 @@ include __DIR__ . '/header.php';
         </div>
     <?php else: ?>
         <?php
-        $gridStyle = $kategori['grid_style'] ?? 'grid';
-        $gridClass = '';
-        
-        if ($gridStyle === 'grid') {
-            $gridClass = 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-        } elseif ($gridStyle === 'list') {
-            $gridClass = 'flex flex-col gap-4';
-        } elseif ($gridStyle === 'masonry') {
-            $gridClass = 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6';
-        }
+        $gridStyle = strtolower(trim((string)($kategori['grid_style'] ?? 'grid')));
+        if (!in_array($gridStyle, ['grid', 'list', 'masonry', 'overlay', 'magazine'], true)) $gridStyle = 'grid';
+        $animasi = strtolower(trim((string)($kategori['animasi'] ?? 'fade-up')));
+        if (!in_array($animasi, ['fade-up', 'fade-down', 'fade-left', 'fade-right', 'zoom-in', 'flip'], true)) $animasi = 'fade-up';
+        $gridClass = 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+        if ($gridStyle === 'list') $gridClass = 'flex flex-col gap-4';
+        elseif ($gridStyle === 'masonry') $gridClass = 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6';
+        elseif ($gridStyle === 'overlay') $gridClass = 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3';
+        elseif ($gridStyle === 'magazine') $gridClass = 'grid gap-6 lg:grid-cols-2';
         ?>
-        
+
         <!-- News Grid (Style: <?php echo ucfirst($gridStyle); ?>) -->
-        <div class="<?php echo $gridClass; ?>">
-            <?php foreach ($berita as $item): ?>
-                <?php if ($gridStyle === 'list'): ?>
+        <div class="<?php echo $gridClass; ?>" data-animate="<?php echo $animasi; ?>">
+            <?php foreach ($berita as $idx => $item): ?>
+                <?php if ($gridStyle === 'overlay'): ?>
+                    <!-- Overlay Style ala Elementor -->
+                    <article class="group relative h-72 overflow-hidden rounded-2xl shadow-sm card-hover" data-animate="<?php echo $animasi; ?>" data-animate-delay="<?php echo ($idx % 3); ?>">
+                        <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block h-full">
+                            <?php if (!empty($item['gambar'])): ?>
+                                <img loading="lazy" src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110">
+                            <?php else: ?>
+                                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>
+                            <?php endif; ?>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                            <div class="absolute bottom-0 p-5">
+                                <span class="inline-block badge-category mb-2"><?php echo htmlspecialchars($item['kategori_nama'] ?? $kategori['nama']); ?></span>
+                                <h3 class="text-lg font-bold leading-snug text-white line-clamp-2"><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                <div class="mt-2 text-xs text-white/80"><?php echo formatTanggalIndonesia($item['tanggal_publikasi']); ?></div>
+                            </div>
+                        </a>
+                    </article>
+                <?php elseif ($gridStyle === 'magazine'): ?>
+                    <!-- Magazine Style: featured besar -->
+                    <article class="group overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm <?php echo $idx === 0 ? 'lg:col-span-2 lg:grid lg:grid-cols-2' : ''; ?>" data-animate="<?php echo $animasi; ?>">
+                        <?php if (!empty($item['gambar'])): ?>
+                            <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block overflow-hidden image-zoom <?php echo $idx === 0 ? 'aspect-[16/9] lg:aspect-auto lg:h-full' : 'aspect-[16/10]'; ?>">
+                                <img loading="lazy" src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="h-full w-full object-cover">
+                            </a>
+                        <?php endif; ?>
+                        <div class="p-5">
+                            <span class="inline-block text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-2"><?php echo htmlspecialchars($item['kategori_nama'] ?? $kategori['nama']); ?></span>
+                            <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block">
+                                <h3 class="<?php echo $idx === 0 ? 'text-2xl' : 'text-base'; ?> font-bold leading-snug text-slate-900 group-hover:text-purple-700 transition line-clamp-2 mb-2"><?php echo htmlspecialchars($item['judul']); ?></h3>
+                                <?php if (!empty($item['ringkasan'])): ?><p class="text-sm text-slate-600 line-clamp-2 mb-3"><?php echo htmlspecialchars($item['ringkasan']); ?></p><?php endif; ?>
+                            </a>
+                            <div class="text-xs text-slate-500"><?php echo formatTanggalIndonesia($item['tanggal_publikasi']); ?></div>
+                        </div>
+                    </article>
+                <?php elseif ($gridStyle === 'list'): ?>
                     <!-- List Style -->
                     <article class="group flex flex-col sm:flex-row gap-4 p-4 rounded-2xl bg-white border border-slate-200 card-hover shadow-sm">
                         <?php if (!empty($item['gambar'])): ?>
@@ -207,6 +255,24 @@ include __DIR__ . '/header.php';
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>
+
+        <?php if (($totalHal ?? 1) > 1): ?>
+        <nav class="mt-10 flex flex-wrap items-center justify-center gap-2">
+            <?php
+            $baseParam = $kategoriSlug !== '' ? 'slug=' . urlencode($kategori['slug']) : 'kategori=' . (int)$kategoriId;
+            $showPages = [];
+            for ($p = 1; $p <= $totalHal; $p++) {
+                if ($p === 1 || $p === $totalHal || abs($p - $halaman) <= 2) $showPages[] = $p;
+            }
+            $prev = 0;
+            foreach ($showPages as $p):
+                if ($p - $prev > 1): ?><span class="px-2 text-slate-400">...</span><?php endif;
+                $prev = $p;
+            ?>
+                <a href="kategori?<?php echo $baseParam; ?>&hal=<?php echo $p; ?>" class="rounded-full px-4 py-2 text-sm font-bold transition <?php echo $p === $halaman ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-300 hover:text-purple-700'; ?>"><?php echo $p; ?></a>
+            <?php endforeach; ?>
+        </nav>
+        <?php endif; ?>
     <?php endif; ?>
 <?php endif; ?>
 

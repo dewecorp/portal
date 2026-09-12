@@ -7,9 +7,12 @@ $currentAdminPage = basename($_SERVER['SCRIPT_NAME'] ?? '');
 // Map admin pages to their menu names
 $adminMenuNames = [
     'dashboard.php' => 'Dashboard',
+    'sections.php' => 'Sections',
     'menu.php' => 'Menu Navigasi',
     'kategori.php' => 'Kategori',
     'berita.php' => 'Berita',
+    'komentar.php' => 'Komentar',
+    'newsletter.php' => 'Newsletter',
     'data_pengunjung.php' => 'Data Pengunjung',
     'settings.php' => 'Pengaturan'
 ];
@@ -824,6 +827,16 @@ function formatHariTanggalIndonesia($tanggal) {
                     </a>
                 </li>
                 <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'sections.php' ? 'active' : ''; ?>" href="sections">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </span>
+                        <span>Sections</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
                     <a class="nav-link <?php echo $currentAdminPage === 'menu.php' ? 'active' : ''; ?>" href="menu">
                         <span class="nav-icon" aria-hidden="true">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -853,6 +866,26 @@ function formatHariTanggalIndonesia($tanggal) {
                             </svg>
                         </span>
                         <span>Berita</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'komentar.php' ? 'active' : ''; ?>" href="komentar">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                            </svg>
+                        </span>
+                        <span>Komentar</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'newsletter.php' ? 'active' : ''; ?>" href="newsletter">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </span>
+                        <span>Newsletter</span>
                     </a>
                 </li>
                 <li class="nav-item mb-1">

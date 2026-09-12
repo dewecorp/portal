@@ -121,6 +121,24 @@ foreach ($navMenus as &$menu) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($pageTitle ?? ($settings['site_name'] ?? 'Portal Berita')); ?></title>
+    <?php
+    $metaDesc = $settings['site_tagline'] ?? 'Berita terkini dan terpercaya';
+    $metaImg = '';
+    if (isset($berita) && is_array($berita)) {
+        if (!empty($berita['ringkasan'])) $metaDesc = mb_substr(strip_tags((string)$berita['ringkasan']), 0, 160);
+        $metaImg = berita_image_url($berita['gambar'] ?? '');
+    }
+    $metaUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . ($_SERVER['REQUEST_URI'] ?? '/');
+    ?>
+    <meta name="description" content="<?php echo htmlspecialchars($metaDesc); ?>">
+    <link rel="canonical" href="<?php echo htmlspecialchars($metaUrl); ?>">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="<?php echo htmlspecialchars($pageTitle ?? ($settings['site_name'] ?? 'Portal Berita')); ?>">
+    <meta property="og:description" content="<?php echo htmlspecialchars($metaDesc); ?>">
+    <meta property="og:url" content="<?php echo htmlspecialchars($metaUrl); ?>">
+    <?php if ($metaImg !== ''): ?><meta property="og:image" content="<?php echo htmlspecialchars($metaImg); ?>"><?php endif; ?>
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="alternate" type="application/rss+xml" title="RSS <?php echo htmlspecialchars($settings['site_name'] ?? 'Portal Berita'); ?>" href="feed">
     <?php if (!empty($settings['favicon_path'])): ?>
     <link rel="icon" href="<?php echo htmlspecialchars($settings['favicon_path']); ?>">
     <?php endif; ?>
@@ -514,6 +532,68 @@ foreach ($navMenus as &$menu) {
                 overflow-x: visible !important;
             }
         }
+        /* Elementor-style section animations — fade-up default, smooth */
+        [data-animate] {
+            opacity: 0;
+            transition: opacity .9s ease-out, transform .9s cubic-bezier(.22,.61,.36,1);
+        }
+        [data-animate]:not(.animate-in) {
+            opacity: 0;
+        }
+        [data-animate="fade-up"] { transform: translate3d(0,70px,0); }
+        [data-animate="fade-down"] { transform: translate3d(0,-70px,0); }
+        [data-animate="fade-left"] { transform: translate3d(90px,0,0); }
+        [data-animate="fade-right"] { transform: translate3d(-90px,0,0); }
+        [data-animate="fade"] { transform: none; }
+        [data-animate="zoom-in"] { transform: scale(.9); }
+        [data-animate="zoom-out"] { transform: scale(1.12); }
+        [data-animate="flip"] { transform: perspective(1000px) rotateX(10deg) translateY(48px); }
+        [data-animate="bounce"] { transform: translate3d(0,70px,0) scale(.96); }
+        [data-animate="slide"] { transform: translate3d(90px,0,0); }
+        [data-animate].animate-in {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        [data-animate="bounce"].animate-in { transition: opacity .8s ease-out, transform 1s cubic-bezier(.34,1.3,.64,1); }
+        [data-animate-delay="1"].animate-in { transition-delay: .1s; }
+        [data-animate-delay="2"].animate-in { transition-delay: .2s; }
+        [data-animate-delay="3"].animate-in { transition-delay: .3s; }
+        [data-animate-delay="4"].animate-in { transition-delay: .4s; }
+        [data-animate-delay="5"].animate-in { transition-delay: .5s; }
+        @media (max-width: 640px) {
+            [data-animate="fade-up"] { transform: translate3d(0,28px,0); }
+            [data-animate="fade-down"] { transform: translate3d(0,-28px,0); }
+            [data-animate="fade-left"] { transform: translate3d(32px,0,0); }
+            [data-animate="fade-right"] { transform: translate3d(-32px,0,0); }
+            [data-animate="slide"] { transform: translate3d(36px,0,0); }
+        }
+        /* Hero carousel: hanya matikan animasi pada gambar slide, section pembungkus tetap ikut */
+        #heroCarousel .carousel-slide [data-animate], [id^="heroCarousel"] .carousel-slide [data-animate] { opacity: 1 !important; transform: none !important; }
+        @media (prefers-reduced-motion: reduce) {
+            [data-animate] { transform: none !important; }
+        }
+        /* SectionBuilder: gaya gambar ala Elementor */
+        .media-gaya-kenburns img { animation: sbKenBurns 14s ease-in-out infinite alternate; }
+        .media-gaya-kenburns-balik img { animation: sbKenBurnsBalik 14s ease-in-out infinite alternate; }
+        .media-gaya-zoom-lambat img { animation: sbZoomLambat 18s ease-in-out infinite alternate; }
+        .media-gaya-geser-kiri img { animation: sbGeserKiri 12s ease-in-out infinite alternate; }
+        .media-gaya-geser-kanan img { animation: sbGeserKanan 12s ease-in-out infinite alternate; }
+        .media-gaya-fade-zoom img { animation: sbFadeZoom 10s ease-in-out infinite alternate; }
+        .media-gaya-melayang { animation: sbMelayang 5s ease-in-out infinite; }
+        @keyframes sbKenBurns { from { transform: scale(1) translate(0,0); } to { transform: scale(1.18) translate(-2%,2%); } }
+        @keyframes sbKenBurnsBalik { from { transform: scale(1.18) translate(2%,-2%); } to { transform: scale(1) translate(0,0); } }
+        @keyframes sbZoomLambat { from { transform: scale(1); } to { transform: scale(1.25); } }
+        @keyframes sbGeserKiri { from { transform: scale(1.1) translateX(3%); } to { transform: scale(1.1) translateX(-3%); } }
+        @keyframes sbGeserKanan { from { transform: scale(1.1) translateX(-3%); } to { transform: scale(1.1) translateX(3%); } }
+        @keyframes sbFadeZoom { 0% { opacity: .7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } 100% { opacity: .7; transform: scale(1); } }
+        @keyframes sbMelayang { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        @media (prefers-reduced-motion: reduce) {
+            .media-gaya-kenburns img, .media-gaya-kenburns-balik img, .media-gaya-zoom-lambat img,
+            .media-gaya-geser-kiri img, .media-gaya-geser-kanan img, .media-gaya-fade-zoom img, .media-gaya-melayang { animation: none !important; }
+        }
+        /* SectionBuilder: carousel berita horizontal */
+        .sb-hscroll { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+        .sb-hscroll > * { scroll-snap-align: start; }
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 text-slate-900 antialiased flex flex-col">
@@ -543,12 +623,14 @@ foreach ($navMenus as &$menu) {
             </div>
         </a>
         <div class="hidden lg:flex items-center gap-3">
-            <div class="relative">
-                <input type="text" placeholder="Cari berita..." class="pl-10 pr-4 py-2 rounded-full border border-slate-200 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition w-64 text-sm">
-                <svg class="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <form action="cari" method="get" class="relative">
+                <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="Cari berita..." class="pl-10 pr-4 py-2 rounded-full border border-slate-200 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition w-64 text-sm">
+                <button type="submit" aria-label="Cari" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
-            </div>
+                </button>
+            </form>
         </div>
     </div>
 </header>

@@ -29,29 +29,31 @@ if ($checkLatestNewsCount && $checkLatestNewsCount->num_rows === 0) {
     $current = $result ? $result->fetch_assoc() : null;
 }
 
-// Add footer columns if they don't exist
-$checkColumns = $conn->query("SHOW COLUMNS FROM settings LIKE 'footer_%'");
-if ($checkColumns && $checkColumns->num_rows < 4) {
-    $columns = [
-        'footer_email VARCHAR(255) NULL',
-        'footer_address TEXT NULL',
-        'footer_phone VARCHAR(50) NULL',
-        'footer_social_facebook VARCHAR(255) NULL',
-        'footer_social_twitter VARCHAR(255) NULL',
-        'footer_social_instagram VARCHAR(255) NULL'
-    ];
-    
-    foreach ($columns as $col) {
-        $colName = explode(' ', $col)[0];
-        $check = $conn->query("SHOW COLUMNS FROM settings LIKE '$colName'");
-        if ($check && $check->num_rows === 0) {
-            $conn->query("ALTER TABLE settings ADD COLUMN $col");
-        }
+$extraSettingsCols = [
+    'footer_email VARCHAR(255) NULL',
+    'footer_address TEXT NULL',
+    'footer_phone VARCHAR(50) NULL',
+    'footer_social_facebook VARCHAR(255) NULL',
+    'footer_social_twitter VARCHAR(255) NULL',
+    'footer_social_instagram VARCHAR(255) NULL',
+    'komentar_aktif TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_moderasi TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_captcha TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_max_links TINYINT NOT NULL DEFAULT 2',
+    'komentar_interval_detik INT NOT NULL DEFAULT 30',
+    'komentar_kata_kasar TEXT NULL',
+];
+$needRefresh = false;
+foreach ($extraSettingsCols as $col) {
+    $colName = explode(' ', $col)[0];
+    $check = $conn->query("SHOW COLUMNS FROM settings LIKE '$colName'");
+    if ($check && $check->num_rows === 0) {
+        if ($conn->query("ALTER TABLE settings ADD COLUMN $col")) $needRefresh = true;
     }
-    
-    // Refresh data
+}
+if ($needRefresh) {
     $result = $conn->query("SELECT * FROM settings ORDER BY id ASC LIMIT 1");
-    $current = $result ? $result->fetch_assoc() : null;
+    $current = $result ? $result->fetch_assoc() : $current;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -64,6 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $footer_social_facebook = trim($_POST['footer_social_facebook'] ?? '');
     $footer_social_twitter = trim($_POST['footer_social_twitter'] ?? '');
     $footer_social_instagram = trim($_POST['footer_social_instagram'] ?? '');
+    $komentar_aktif = isset($_POST['komentar_aktif']) ? 1 : 0;
+    $komentar_moderasi = isset($_POST['komentar_moderasi']) ? 1 : 0;
+    $komentar_captcha = isset($_POST['komentar_captcha']) ? 1 : 0;
+    $komentar_max_links = max(0, min(10, (int)($_POST['komentar_max_links'] ?? 2)));
+    $komentar_interval_detik = max(5, min(600, (int)($_POST['komentar_interval_detik'] ?? 30)));
+    $komentar_kata_kasar = trim((string)($_POST['komentar_kata_kasar'] ?? ''));
     $logo_path = $current['logo_path'] ?? null;
     $favicon_path = $current['favicon_path'] ?? null;
 
@@ -125,9 +133,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === '') {
-            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ? WHERE id = ?");
             $id = (int)$current['id'];
-            $stmt->bind_param('ssssissssssi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $id);
+            $stmt->bind_param('ssssissssssiiiiisi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $id);
             if ($stmt->execute()) {
                 $success = 'Pengaturan portal berhasil disimpan.';
                 $current['site_name'] = $site_name;
@@ -141,6 +149,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current['footer_social_facebook'] = $footer_social_facebook;
                 $current['footer_social_twitter'] = $footer_social_twitter;
                 $current['footer_social_instagram'] = $footer_social_instagram;
+                $current['komentar_aktif'] = $komentar_aktif;
+                $current['komentar_moderasi'] = $komentar_moderasi;
+                $current['komentar_captcha'] = $komentar_captcha;
+                $current['komentar_max_links'] = $komentar_max_links;
+                $current['komentar_interval_detik'] = $komentar_interval_detik;
+                $current['komentar_kata_kasar'] = $komentar_kata_kasar;
             } else {
                 $error = 'Terjadi kesalahan saat menyimpan pengaturan.';
             }
@@ -244,6 +258,33 @@ include __DIR__ . '/header.php';
                     <div class="mb-3">
                         <label class="form-label">Instagram URL</label>
                         <input type="url" name="footer_social_instagram" class="form-control" value="<?php echo htmlspecialchars($current['footer_social_instagram'] ?? ''); ?>" placeholder="https://instagram.com/username">
+                    </div>
+                    <hr class="my-4">
+                    <h3 class="h6 mb-3">Komentar & Anti-Spam</h3>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="komentar_aktif" id="komentar_aktif" <?php echo ((int)($current['komentar_aktif'] ?? 1) === 1) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="komentar_aktif">Aktifkan komentar</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="komentar_moderasi" id="komentar_moderasi" <?php echo ((int)($current['komentar_moderasi'] ?? 1) === 1) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="komentar_moderasi">Moderasi manual (tahan sebelum tampil)</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="komentar_captcha" id="komentar_captcha" <?php echo ((int)($current['komentar_captcha'] ?? 1) === 1) ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="komentar_captcha">Aktifkan captcha hitung</label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maksimal link per komentar</label>
+                        <input type="number" name="komentar_max_links" class="form-control" min="0" max="10" value="<?php echo (int)($current['komentar_max_links'] ?? 2); ?>">
+                        <div class="form-text">Komentar dengan link lebih banyak otomatis ditandai spam.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jeda kirim per IP (detik)</label>
+                        <input type="number" name="komentar_interval_detik" class="form-control" min="5" max="600" value="<?php echo (int)($current['komentar_interval_detik'] ?? 30); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kata terlarang (pisah koma/baris)</label>
+                        <textarea name="komentar_kata_kasar" class="form-control" rows="3" placeholder="judi, slot, togel"><?php echo htmlspecialchars($current['komentar_kata_kasar'] ?? ''); ?></textarea>
                     </div>
                     <div class="d-flex justify-content-end">
                         <button type="submit" class="btn btn-primary">

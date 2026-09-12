@@ -78,15 +78,23 @@ if (in_array($action, ['add', 'edit'], true) && $_SERVER['REQUEST_METHOD'] === '
     $nama = trim($_POST['nama'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
     $grid_count = (int)($_POST['grid_count'] ?? 12);
-    $grid_style = $_POST['grid_style'] ?? 'grid';
-    
+    $grid_style = strtolower(trim((string)($_POST['grid_style'] ?? 'grid')));
+    $animasi = strtolower(trim((string)($_POST['animasi'] ?? 'fade-up')));
+
     // Validate grid_count
     if ($grid_count < 4) $grid_count = 4;
     if ($grid_count > 50) $grid_count = 50;
-    
+
     // Validate grid_style
-    if (!in_array($grid_style, ['grid', 'list', 'masonry'])) {
+    if (!in_array($grid_style, ['grid', 'list', 'masonry', 'overlay', 'magazine'], true)) {
         $grid_style = 'grid';
+    }
+    if (!in_array($animasi, ['fade-up', 'fade-down', 'fade-left', 'fade-right', 'zoom-in', 'flip'], true)) {
+        $animasi = 'fade-up';
+    }
+    $chkAnim = $conn->query("SHOW COLUMNS FROM kategori LIKE 'animasi'");
+    if ($chkAnim && $chkAnim->num_rows === 0) {
+        $conn->query("ALTER TABLE kategori ADD COLUMN animasi VARCHAR(30) NOT NULL DEFAULT 'fade-up' AFTER grid_style");
     }
 
     if ($nama === '') {
@@ -97,11 +105,11 @@ if (in_array($action, ['add', 'edit'], true) && $_SERVER['REQUEST_METHOD'] === '
         }
 
         if ($action === 'add') {
-            $stmt = $conn->prepare("INSERT INTO kategori (nama, slug, grid_count, grid_style) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param('ssis', $nama, $slug, $grid_count, $grid_style);
+            $stmt = $conn->prepare("INSERT INTO kategori (nama, slug, grid_count, grid_style, animasi) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param('ssiss', $nama, $slug, $grid_count, $grid_style, $animasi);
         } else {
-            $stmt = $conn->prepare("UPDATE kategori SET nama = ?, slug = ?, grid_count = ?, grid_style = ? WHERE id = ?");
-            $stmt->bind_param('ssisi', $nama, $slug, $grid_count, $grid_style, $id);
+            $stmt = $conn->prepare("UPDATE kategori SET nama = ?, slug = ?, grid_count = ?, grid_style = ?, animasi = ? WHERE id = ?");
+            $stmt->bind_param('ssissi', $nama, $slug, $grid_count, $grid_style, $animasi, $id);
         }
 
         if ($stmt->execute()) {
@@ -210,7 +218,8 @@ include __DIR__ . '/header.php';
                                    data-nama="<?php echo htmlspecialchars($kat['nama']); ?>"
                                    data-slug="<?php echo htmlspecialchars($kat['slug']); ?>"
                                    data-grid-count="<?php echo (int)($kat['grid_count'] ?? 12); ?>"
-                                   data-grid-style="<?php echo htmlspecialchars($kat['grid_style'] ?? 'grid'); ?>">
+                                   data-grid-style="<?php echo htmlspecialchars($kat['grid_style'] ?? 'grid'); ?>"
+                                   data-animasi="<?php echo htmlspecialchars($kat['animasi'] ?? 'fade-up'); ?>">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-danger btn-delete-kategori" data-id="<?php echo (int)$kat['id']; ?>" data-nama="<?php echo htmlspecialchars($kat['nama']); ?>">
@@ -297,8 +306,25 @@ include __DIR__ . '/header.php';
                                         <i class="bi bi-columns-gap me-1"></i>Masonry
                                     </label>
                                 </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_overlay" value="overlay" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'overlay' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="grid_style_overlay">Overlay</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_magazine" value="magazine" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'magazine' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="grid_style_magazine">Magazine</label>
+                                </div>
                             </div>
                             <div class="form-text mb-3">Pilih tata letak tampilan berita</div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Animasi Section</label>
+                                <select name="animasi" class="form-select">
+                                    <?php $addAnim = $_POST['animasi'] ?? 'fade-up'; ?>
+                                    <?php foreach (['fade-up' => 'Fade Up', 'fade-down' => 'Fade Down', 'fade-left' => 'Fade Left', 'fade-right' => 'Fade Right', 'zoom-in' => 'Zoom In', 'flip' => 'Flip'] as $v => $l): ?>
+                                    <option value="<?php echo $v; ?>" <?php echo $addAnim === $v ? 'selected' : ''; ?>><?php echo $l; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             
                             <!-- Grid Style Previews -->
                             <div class="grid grid-cols-3 gap-3 mt-3">
@@ -459,8 +485,25 @@ include __DIR__ . '/header.php';
                                         <i class="bi bi-columns-gap me-1"></i>Masonry
                                     </label>
                                 </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_overlay" value="overlay" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'overlay' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="edit_grid_style_overlay">Overlay</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_magazine" value="magazine" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'magazine' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="edit_grid_style_magazine">Magazine</label>
+                                </div>
                             </div>
                             <div class="form-text mb-3">Pilih tata letak tampilan berita</div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Animasi Section</label>
+                                <select name="animasi" id="edit_animasi" class="form-select">
+                                    <?php $editAnim = $editKategori['animasi'] ?? 'fade-up'; ?>
+                                    <?php foreach (['fade-up' => 'Fade Up', 'fade-down' => 'Fade Down', 'fade-left' => 'Fade Left', 'fade-right' => 'Fade Right', 'zoom-in' => 'Zoom In', 'flip' => 'Flip'] as $v => $l): ?>
+                                    <option value="<?php echo $v; ?>" <?php echo $editAnim === $v ? 'selected' : ''; ?>><?php echo $l; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             
                             <!-- Grid Style Previews -->
                             <div class="grid grid-cols-3 gap-3 mt-3">
@@ -560,10 +603,12 @@ include __DIR__ . '/header.php';
             var namaInput = document.getElementById('edit_nama');
             var slugInput = document.getElementById('edit_slug');
             var gridCountInput = document.getElementById('edit_grid_count');
+            var animasiInput = document.getElementById('edit_animasi');
             var form = document.getElementById('formEditKategori');
             if (namaInput) namaInput.value = btn.getAttribute('data-nama') || '';
             if (slugInput) slugInput.value = btn.getAttribute('data-slug') || '';
             if (gridCountInput) gridCountInput.value = btn.getAttribute('data-grid-count') || '12';
+            if (animasiInput) animasiInput.value = btn.getAttribute('data-animasi') || 'fade-up';
             
             // Set grid style radio buttons
             var gridStyle = btn.getAttribute('data-grid-style') || 'grid';

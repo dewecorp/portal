@@ -74,7 +74,8 @@ $sqlKategori = "CREATE TABLE IF NOT EXISTS kategori (
   nama VARCHAR(100) NOT NULL,
   slug VARCHAR(150) NOT NULL,
   grid_count INT NOT NULL DEFAULT 12,
-  grid_style ENUM('grid','list','masonry') NOT NULL DEFAULT 'grid',
+  grid_style VARCHAR(20) NOT NULL DEFAULT 'grid',
+  animasi VARCHAR(30) NOT NULL DEFAULT 'fade-up',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
 
@@ -93,6 +94,7 @@ $sqlBerita = "CREATE TABLE IF NOT EXISTS berita (
   status ENUM('draft','publish') NOT NULL DEFAULT 'draft',
   tanggal_publikasi DATETIME NULL,
   gambar VARCHAR(255) NULL,
+  views INT UNSIGNED NOT NULL DEFAULT 0,
   show_meta TINYINT(1) NOT NULL DEFAULT 1,
   show_ringkasan TINYINT(1) NOT NULL DEFAULT 1,
   show_penulis TINYINT(1) NOT NULL DEFAULT 1,
@@ -246,10 +248,68 @@ foreach ($displayColumns as $colName => $alterSql) {
     }
 }
 
+$conn->query("CREATE TABLE IF NOT EXISTS komentar (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  berita_id INT UNSIGNED NOT NULL,
+  nama VARCHAR(100) NOT NULL,
+  email VARCHAR(150) NULL,
+  website VARCHAR(255) NULL,
+  isi TEXT NOT NULL,
+  status ENUM('pending','approved','spam') NOT NULL DEFAULT 'pending',
+  ip_hash CHAR(64) NULL,
+  user_agent VARCHAR(500) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_komentar_berita (berita_id),
+  INDEX idx_komentar_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$chkViews = $conn->query("SHOW COLUMNS FROM berita LIKE 'views'");
+if ($chkViews && $chkViews->num_rows === 0) {
+    $conn->query("ALTER TABLE berita ADD COLUMN views INT UNSIGNED NOT NULL DEFAULT 0 AFTER gambar");
+}
+$conn->query("CREATE TABLE IF NOT EXISTS sections (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  area ENUM('home','footer') NOT NULL DEFAULT 'home',
+  tipe VARCHAR(40) NOT NULL DEFAULT 'latest',
+  judul VARCHAR(200) NULL,
+  pengaturan TEXT NULL,
+  animasi VARCHAR(30) NOT NULL DEFAULT 'fade-up',
+  urutan INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_sections_area (area, urutan)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("ALTER TABLE kategori MODIFY COLUMN grid_style VARCHAR(20) NOT NULL DEFAULT 'grid'");
+$chkAnim = $conn->query("SHOW COLUMNS FROM kategori LIKE 'animasi'");
+if ($chkAnim && $chkAnim->num_rows === 0) {
+    $conn->query("ALTER TABLE kategori ADD COLUMN animasi VARCHAR(30) NOT NULL DEFAULT 'fade-up' AFTER grid_style");
+}
+$settingsExtras = [
+    'komentar_aktif TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_moderasi TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_captcha TINYINT(1) NOT NULL DEFAULT 1',
+    'komentar_max_links TINYINT NOT NULL DEFAULT 2',
+    'komentar_interval_detik INT NOT NULL DEFAULT 30',
+    'komentar_kata_kasar TEXT NULL',
+];
+foreach ($settingsExtras as $def) {
+    $nm = explode(' ', trim($def))[0];
+    $chk = $conn->query("SHOW COLUMNS FROM settings LIKE '$nm'");
+    if ($chk && $chk->num_rows === 0) $conn->query("ALTER TABLE settings ADD COLUMN $def");
+}
+
 // Migration: add display settings columns to kategori table
 $kategoriColumns = [
     'grid_count' => 'ALTER TABLE kategori ADD COLUMN grid_count INT NOT NULL DEFAULT 12 AFTER slug',
-    'grid_style' => "ALTER TABLE kategori ADD COLUMN grid_style ENUM('grid','list','masonry') NOT NULL DEFAULT 'grid' AFTER grid_count"
+    'grid_style' => "ALTER TABLE kategori ADD COLUMN grid_style VARCHAR(20) NOT NULL DEFAULT 'grid' AFTER grid_count"
 ];
 
 foreach ($kategoriColumns as $colName => $alterSql) {

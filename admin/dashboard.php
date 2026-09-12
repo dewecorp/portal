@@ -6,6 +6,8 @@ $totalKategori = 0;
 $totalBerita = 0;
 $totalPublish = 0;
 $totalDraft = 0;
+$totalKomentarPending = 0;
+$totalKomentarSpam = 0;
 $siteName = 'Portal Berita';
 $recentBerita = [];
 
@@ -58,6 +60,14 @@ $result = $conn->query("SELECT COUNT(*) AS total FROM berita WHERE status = 'dra
 if ($result) {
     $row = $result->fetch_assoc();
     $totalDraft = (int)$row['total'];
+}
+
+$rk = $conn->query("SELECT status, COUNT(*) jml FROM komentar GROUP BY status");
+if ($rk) {
+    while ($kr = $rk->fetch_assoc()) {
+        if ($kr['status'] === 'pending') $totalKomentarPending = (int)$kr['jml'];
+        if ($kr['status'] === 'spam') $totalKomentarSpam = (int)$kr['jml'];
+    }
 }
 
 $resSettings = $conn->query("SELECT site_name FROM settings ORDER BY id ASC LIMIT 1");
@@ -135,6 +145,14 @@ include __DIR__ . '/header.php';
         <div class="text-4xl font-black tracking-tight text-slate-950"><?php echo $totalDraft; ?></div>
         <p class="mt-2 text-sm text-slate-500">Artikel yang belum dipublikasikan.</p>
     </div>
+    <a href="komentar?status=pending" class="rounded-2xl border border-white bg-white p-5 shadow-sm transition hover:shadow-md">
+        <div class="mb-5 flex items-center justify-between">
+            <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-blue-600">Komentar</span>
+            <span class="text-sm font-bold text-slate-400"><?php echo (int)$totalKomentarSpam; ?> spam</span>
+        </div>
+        <div class="text-4xl font-black tracking-tight text-slate-950"><?php echo (int)$totalKomentarPending; ?></div>
+        <p class="mt-2 text-sm text-slate-500">Menunggu moderasi. Klik untuk kelola.</p>
+    </a>
 </div>
 
 <!-- Grafik Berita Publish Per Bulan -->
