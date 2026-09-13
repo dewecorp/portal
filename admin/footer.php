@@ -1,3 +1,4 @@
+            <div style="height:2.5rem;flex-shrink:0;" aria-hidden="true"></div>
             <footer class="admin-footer">
                 <p class="small text-muted mb-0">
                     &copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($settings['site_name'] ?? 'Portal Berita'); ?> Admin Panel &mdash; Portal Berita Management System

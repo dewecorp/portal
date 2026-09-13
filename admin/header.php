@@ -314,11 +314,14 @@ function formatHariTanggalIndonesia($tanggal) {
             min-height: calc(100vh - 68px);
             display: flex;
             flex-direction: column;
-            padding: 1.75rem;
+            padding: 1.75rem 1.75rem 1.5rem 1.75rem;
         }
         .admin-footer {
             margin-top: auto;
-            padding: 2rem 1.5rem 1.5rem;
+            margin-left: -1.75rem;
+            margin-right: -1.75rem;
+            margin-bottom: -1.5rem;
+            padding: 0.75rem 1.75rem;
             border-top: 1px solid var(--admin-line);
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -863,27 +866,6 @@ function formatHariTanggalIndonesia($tanggal) {
                     </a>
                 </li>
                 <li class="nav-item mb-1">
-                    <a class="nav-link <?php echo $currentAdminPage === 'sections.php' ? 'active' : ''; ?>" href="sections">
-                        <span class="nav-icon" aria-hidden="true">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </span>
-                        <span>Sections</span>
-                    </a>
-                </li>
-                <li class="nav-item mb-1">
-                    <a class="nav-link <?php echo $currentAdminPage === 'menu.php' ? 'active' : ''; ?>" href="menu">
-                        <span class="nav-icon" aria-hidden="true">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m17 16 2 2 2-2"></path>
-                            </svg>
-                        </span>
-                        <span>Menu Navigasi</span>
-                    </a>
-                </li>
-                <li class="nav-item mb-1">
                     <a class="nav-link <?php echo $currentAdminPage === 'kategori.php' ? 'active' : ''; ?>" href="kategori">
                         <span class="nav-icon" aria-hidden="true">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -902,6 +884,27 @@ function formatHariTanggalIndonesia($tanggal) {
                             </svg>
                         </span>
                         <span>Berita</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'sections.php' ? 'active' : ''; ?>" href="sections">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </span>
+                        <span>Sections</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'menu.php' ? 'active' : ''; ?>" href="menu">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m17 16 2 2 2-2"></path>
+                            </svg>
+                        </span>
+                        <span>Menu Navigasi</span>
                     </a>
                 </li>
                 <li class="nav-item mb-1">

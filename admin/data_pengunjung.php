@@ -154,7 +154,7 @@ foreach (['Negara Pengunjung' => $countryStats, 'OS yang Digunakan' => $osStats,
     <?php $bi++; endforeach; ?>
 </div>
 
-<div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+<div class="mt-5 mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
     Negara diperkirakan dari bahasa browser pengunjung. Untuk akurasi negara berbasis IP, website perlu memakai layanan GeoIP atau CDN yang mengirim header negara.
 </div>
 
