@@ -93,18 +93,49 @@ function section_grid_class(string $style, int $kolom): string
     $kolom = max(2, min(4, $kolom));
     switch ($style) {
         case 'kartu-2': return 'grid gap-6 sm:grid-cols-2';
-        case 'kartu-3': return 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3';
+        case 'kartu-3': return 'grid gap-6 sm:grid-cols-2 xl:grid-cols-3';
+        case 'kartu-4': return 'grid gap-6 sm:grid-cols-2 xl:grid-cols-4';
         case 'list':
         case 'minimal':
         case 'timeline': return 'flex flex-col gap-4';
-        case 'masonry': return 'columns-1 sm:columns-2 lg:columns-3 gap-6';
-        case 'overlay': return 'grid gap-6 sm:grid-cols-2 ' . ($kolom === 2 ? 'lg:grid-cols-2' : ($kolom === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-4'));
+        case 'masonry': return 'columns-1 sm:columns-2 xl:columns-3 gap-6';
+        case 'overlay': return 'grid gap-6 sm:grid-cols-2 ' . ($kolom === 2 ? 'xl:grid-cols-2' : ($kolom === 3 ? 'xl:grid-cols-3' : 'xl:grid-cols-4'));
         case 'magazine':
-        case 'sorotan-list': return 'grid gap-6 lg:grid-cols-2';
-        case 'kartu-horizontal': return 'grid gap-6 md:grid-cols-2';
-        case 'kartu-4':
-        default: return 'grid gap-6 sm:grid-cols-2 lg:grid-cols-4';
+        case 'sorotan-list': return 'grid gap-6 xl:grid-cols-2';
+        case 'kartu-horizontal': return 'grid gap-6 xl:grid-cols-2';
+        default: return 'grid gap-6 sm:grid-cols-2 xl:grid-cols-4';
     }
+}
+
+function berita_sorotan_html(array $item): string
+{
+    $url = htmlspecialchars(berita_url($item));
+    $img = berita_image_url($item['gambar'] ?? '');
+    $tgl = isset($item['tanggal_publikasi']) ? formatTanggalIndonesia($item['tanggal_publikasi']) : '';
+    $bg = $img !== ''
+        ? '<img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">'
+        : '<div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>';
+    return '<a href="' . $url . '" class="group relative block h-full min-h-[320px] w-full overflow-hidden rounded-2xl shadow-sm card-hover md:min-h-0">'
+        . $bg . '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>'
+        . '<div class="absolute bottom-0 p-4 sm:p-5">'
+        . '<span class="mb-2 inline-block rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold text-white">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span>'
+        . '<h3 class="text-base sm:text-lg font-black leading-snug text-white line-clamp-3 break-words">' . htmlspecialchars($item['judul']) . '</h3>'
+        . '<div class="mt-1 text-xs text-white/80">' . htmlspecialchars($tgl) . '</div>'
+        . '</div></a>';
+}
+
+function berita_list_kompak_html(array $item): string
+{
+    $url = htmlspecialchars(berita_url($item));
+    $tgl = isset($item['tanggal_publikasi']) ? formatTanggalIndonesia($item['tanggal_publikasi']) : '';
+    $img = berita_image_url($item['gambar'] ?? '');
+    $thumb = $img !== ''
+        ? '<span class="block h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-110"></span>'
+        : '<span class="block h-16 w-20 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500"></span>';
+    return '<a href="' . $url . '" class="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm card-hover">'
+        . $thumb
+        . '<span class="min-w-0"><span class="block text-sm font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-purple-700">' . htmlspecialchars($item['judul']) . '</span>'
+        . '<span class="mt-0.5 block truncate text-xs text-slate-500">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . ' • ' . htmlspecialchars($tgl) . '</span></span></a>';
 }
 
 function berita_list_html(array $item): string
@@ -117,14 +148,14 @@ function berita_list_html(array $item): string
     $ringkas = !empty($item['ringkasan']) ? '<p class="text-sm text-slate-600 line-clamp-2 mb-2">' . htmlspecialchars($item['ringkasan']) . '</p>' : '';
     $img = berita_image_url($item['gambar'] ?? '');
     $thumb = $img !== ''
-        ? '<a href="' . $url . '" class="block w-full sm:w-56 h-44 shrink-0 overflow-hidden rounded-xl image-zoom"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="' . $judul . '" class="h-full w-full object-cover"></a>'
-        : '<div class="w-full sm:w-56 h-44 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500"></div>';
-    return '<article class="group flex flex-col sm:flex-row gap-5 p-4 rounded-2xl bg-white border border-slate-200 card-hover shadow-sm">'
+        ? '<a href="' . $url . '" class="block w-full md:w-36 xl:w-44 h-40 md:h-24 xl:h-28 shrink-0 overflow-hidden rounded-lg image-zoom"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="' . $judul . '" class="h-full w-full object-cover"></a>'
+        : '<div class="w-full md:w-36 xl:w-44 h-40 md:h-24 xl:h-28 shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500"></div>';
+    return '<article class="group flex flex-col md:flex-row gap-3 p-3 rounded-xl bg-white border border-slate-200 card-hover shadow-sm">'
         . $thumb
         . '<div class="min-w-0 flex-1"><span class="inline-block text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-1">' . $kat . '</span>'
-        . '<a href="' . $url . '"><h3 class="text-lg font-bold text-slate-900 group-hover:text-purple-700 line-clamp-2 mb-1">' . $judul . '</h3></a>'
+        . '<a href="' . $url . '"><h3 class="text-sm xl:text-base font-bold text-slate-900 group-hover:text-purple-700 line-clamp-2 mb-1 break-words">' . $judul . '</h3></a>'
         . $ringkas
-        . '<div class="flex items-center gap-2 text-xs text-slate-500"><span>' . htmlspecialchars($tgl) . '</span>' . $penulis . '</div>'
+        . '<div class="flex flex-wrap items-center gap-2 text-xs text-slate-500"><span class="whitespace-nowrap">' . htmlspecialchars($tgl) . '</span>' . $penulis . '</div>'
         . '</div></article>';
 }
 
@@ -163,49 +194,73 @@ function berita_timeline_html(array $item): string
         . '</div>';
 }
 
+function anim_attr_name(string $animAttr): string
+{
+    if (preg_match('/data-animate="([^"]+)"/', $animAttr, $m)) return $m[1];
+    return '';
+}
+
 function anim_item_html(string $inner, string $animAttr, int $i, string $cls = ''): string
 {
-    // Kartu ikut parent <section>: tanpa bungkus animasi sendiri.
-    if ($cls === '') return $inner;
-    return '<div class="' . $cls . '">' . $inner . '</div>';
+    $anim = anim_attr_name($animAttr);
+    if ($anim === '') {
+        if ($cls === '') return $inner;
+        return '<div class="' . $cls . '">' . $inner . '</div>';
+    }
+    $delay = $i % 4;
+    $attr = ' data-animate="' . htmlspecialchars($anim) . '"';
+    if ($delay > 0) $attr .= ' data-animate-delay="' . $delay . '"';
+    // Suntik atribut ke tag pertama agar kelas grid (col-span, break-inside) tidak rusak.
+    $trim = ltrim($inner);
+    if ($cls === '' && preg_match('/^<([a-z0-9]+)((?:\s[^>]*)?)>/i', $trim, $m)) {
+        if (strpos($m[0], 'data-animate') !== false) return $inner;
+        $newTag = '<' . $m[1] . $m[2] . $attr . '>';
+        $pos = strpos($inner, $m[0]);
+        if ($pos !== false) return substr($inner, 0, $pos) . $newTag . substr($inner, $pos + strlen($m[0]));
+        return $inner;
+    }
+    if ($cls === '') return '<div' . $attr . '>' . $inner . '</div>';
+    return '<div class="' . $cls . '"' . $attr . '>' . $inner . '</div>';
 }
 
 function render_berita_grid(array $rows, string $style, int $kolom, string $animAttr, bool $showRingkasan = true, bool $denganNomor = false): void
 {
     $style = section_normalize_style($style);
     if ($style === 'magazine') {
-        echo '<div class="grid gap-6 lg:grid-cols-2">';
+        // 1 sorotan besar (2x2) + sisa kartu kecil mengisi grid — sama seperti preview admin.
+        echo '<div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">';
         foreach ($rows as $i => $item) {
             if ($i === 0) {
                 $url = htmlspecialchars(berita_url($item));
                 $img = berita_image_url($item['gambar'] ?? '');
-                $big = '<a href="' . $url . '" class="group relative overflow-hidden rounded-2xl shadow-sm card-hover min-h-[320px] block lg:row-span-2">';
+                $big = '<a href="' . $url . '" class="group relative overflow-hidden rounded-2xl shadow-sm card-hover min-h-[320px] sm:min-h-[360px] block sm:col-span-2 xl:row-span-2 xl:h-full xl:min-h-[420px]">';
                 $big .= $img !== '' ? '<img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">' : '<div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>';
                 $big .= '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>';
-                $big .= '<div class="absolute bottom-0 p-6"><span class="inline-block badge-category mb-2">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span><h3 class="text-xl font-black text-white leading-snug">' . htmlspecialchars($item['judul']) . '</h3></div></a>';
+                $big .= '<div class="absolute bottom-0 p-6"><span class="inline-block badge-category mb-2">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span><h3 class="text-xl font-black text-white leading-snug break-words">' . htmlspecialchars($item['judul']) . '</h3></div></a>';
                 echo anim_item_html($big, $animAttr, $i);
             } else {
-                echo anim_item_html(berita_list_html($item), $animAttr, $i);
+                echo anim_item_html(berita_card_html($item, $showRingkasan), $animAttr, $i);
             }
         }
         echo '</div>';
         return;
     }
     if ($style === 'sorotan-list') {
-        echo '<div class="grid gap-6 lg:grid-cols-5">';
+        // Sorotan 5 berita: 1 besar setinggi 4 list kompak. Sisa (berita ke-6 dst) tampil sebagai kartu.
+        echo '<div class="grid gap-4 md:grid-cols-5 md:items-stretch">';
         foreach ($rows as $i => $item) {
             if ($i === 0) {
-                echo anim_item_html('<div class="lg:col-span-3">' . berita_card_html($item, true) . '</div>', $animAttr, $i);
+                echo anim_item_html('<div class="flex md:col-span-3">' . berita_sorotan_html($item) . '</div>', $animAttr, $i);
                 if (isset($rows[1])) {
-                    $subs = '';
-                    foreach (array_slice($rows, 1, 4) as $k => $sub) $subs .= anim_item_html(berita_list_html($sub), $animAttr, $k + 1);
-                    echo '<div class="lg:col-span-2 flex flex-col gap-4">' . $subs . '</div>';
+                    echo '<div class="grid content-between gap-3 md:col-span-2">';
+                    foreach (array_slice($rows, 1, 4) as $k => $sub) echo anim_item_html(berita_list_kompak_html($sub), $animAttr, $k + 1);
+                    echo '</div>';
                 }
                 break;
             }
         }
         if (count($rows) > 5) {
-            echo '</div><div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">';
+            echo '</div><div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 mt-6">';
             foreach (array_slice($rows, 5) as $k => $item) echo anim_item_html(berita_card_html($item, $showRingkasan), $animAttr, $k);
             echo '</div>';
         } else {
@@ -214,7 +269,7 @@ function render_berita_grid(array $rows, string $style, int $kolom, string $anim
         return;
     }
     if ($style === 'kartu-horizontal') {
-        echo '<div class="grid gap-6 md:grid-cols-2">';
+        echo '<div class="grid gap-6 xl:grid-cols-2">';
         foreach ($rows as $i => $item) echo anim_item_html(berita_list_html($item), $animAttr, $i);
         echo '</div>';
         return;
@@ -247,8 +302,14 @@ function render_berita_grid(array $rows, string $style, int $kolom, string $anim
         return;
     }
     if ($style === 'masonry') {
-        echo '<div class="columns-1 sm:columns-2 lg:columns-3 gap-6">';
-        foreach ($rows as $i => $item) echo anim_item_html('<div class="break-inside-avoid mb-6">' . berita_card_html($item, $showRingkasan) . '</div>', $animAttr, $i);
+        // Rasio bervariasi mengikuti preview admin (70% / 100% / 55%).
+        $aspects = ['aspect-[4/3]', 'aspect-square', 'aspect-[4/5]'];
+        echo '<div class="columns-1 sm:columns-2 xl:columns-3 gap-6">';
+        foreach ($rows as $i => $item) {
+            $card = berita_card_html($item, $showRingkasan);
+            $card = str_replace('aspect-[16/10]', $aspects[$i % count($aspects)], $card);
+            echo anim_item_html('<div class="break-inside-avoid mb-6">' . $card . '</div>', $animAttr, $i);
+        }
         echo '</div>';
         return;
     }
@@ -304,15 +365,16 @@ function render_home_section(mysqli $conn, array $sec): void
         if ($res) while ($r = $res->fetch_assoc()) $rows[] = $r;
         if (empty($rows)) return;
         $cid = 'heroCarousel' . $sid;
+        $gayaHero = section_media_gaya_class($cfg);
         ?>
         <section class="mb-12"<?php echo $animAttr; ?>>
             <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-xl" id="<?php echo $cid; ?>">
                 <div class="relative" style="min-height: 500px;">
                     <?php foreach ($rows as $index => $news): ?>
-                        <div class="carousel-slide absolute inset-0 transition-opacity duration-700 <?php echo $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'; ?>" data-slide="<?php echo $index; ?>">
+                        <div class="carousel-slide absolute inset-0 transition-opacity duration-700 <?php echo $index === 0 ? 'opacity-100 z-10 visible' : 'opacity-0 z-0 invisible pointer-events-none'; ?>" data-slide="<?php echo $index; ?>" aria-hidden="<?php echo $index === 0 ? 'false' : 'true'; ?>">
                             <a href="<?php echo htmlspecialchars(berita_url($news)); ?>" class="block h-full">
                                 <?php if (!empty($news['gambar'])): ?>
-                                    <div class="absolute inset-0 image-zoom"><img src="<?php echo htmlspecialchars(berita_image_url($news['gambar'])); ?>" alt="<?php echo htmlspecialchars($news['judul']); ?>" class="h-full w-full object-cover"></div>
+                                    <div class="absolute inset-0 image-zoom overflow-hidden<?php echo $gayaHero; ?>"><img src="<?php echo htmlspecialchars(berita_image_url($news['gambar'])); ?>" alt="<?php echo htmlspecialchars($news['judul']); ?>" class="h-full w-full object-cover"></div>
                                 <?php else: ?>
                                     <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500"></div>
                                 <?php endif; ?>
@@ -350,10 +412,15 @@ function render_home_section(mysqli $conn, array $sec): void
             var cur = 0, timer = null;
             function show(i) {
                 slides.forEach(function(s, k) {
-                    s.classList.toggle('opacity-100', k === i);
-                    s.classList.toggle('z-10', k === i);
-                    s.classList.toggle('opacity-0', k !== i);
-                    s.classList.toggle('z-0', k !== i);
+                    var on = k === i;
+                    s.classList.toggle('opacity-100', on);
+                    s.classList.toggle('z-10', on);
+                    s.classList.toggle('visible', on);
+                    s.classList.toggle('opacity-0', !on);
+                    s.classList.toggle('z-0', !on);
+                    s.classList.toggle('invisible', !on);
+                    s.classList.toggle('pointer-events-none', !on);
+                    s.setAttribute('aria-hidden', on ? 'false' : 'true');
                 });
                 dots.forEach(function(d, k) {
                     d.className = 'rounded-full transition-all ' + (k === i ? 'bg-white w-8 h-3' : 'bg-white/50 w-3 h-3');
@@ -490,7 +557,7 @@ function render_home_section(mysqli $conn, array $sec): void
         echo '<section class="mb-12"' . $animAttr . '>';
         echo section_header_html($judul !== '' ? $judul : 'Sorotan Berita');
         echo '<div class="relative"><div id="' . $cid . '" class="sb-hscroll flex gap-5 overflow-x-auto pb-2">';
-        foreach ($rows as $item) echo '<div class="w-72 shrink-0">' . berita_card_html($item, false) . '</div>';
+        foreach ($rows as $i => $item) echo anim_item_html(berita_card_html($item, false), $animAttr, $i, 'w-72 shrink-0');
         echo '</div>';
         echo '<button type="button" data-prev="' . $cid . '" class="hidden md:flex absolute -left-5 top-1/3 w-11 h-11 rounded-full bg-white shadow-xl items-center justify-center text-xl font-black text-purple-700">‹</button>';
         echo '<button type="button" data-next="' . $cid . '" class="hidden md:flex absolute -right-5 top-1/3 w-11 h-11 rounded-full bg-white shadow-xl items-center justify-center text-xl font-black text-purple-700">›</button></div></section>';
@@ -626,11 +693,33 @@ function render_home_section(mysqli $conn, array $sec): void
             if ($res) while ($r = $res->fetch_assoc()) $items[] = $r['judul'] . ' — ' . formatTanggalIndonesia($r['tanggal_publikasi']);
         }
         if (empty($items)) return;
+        $items = array_slice($items, 0, $jumlah);
+        $style = section_normalize_style((string)section_opt($cfg, 'style_grid', 'timeline'));
         echo '<section class="mb-12"' . $animAttr . '><div class="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">';
         echo section_header_html($judul !== '' ? $judul : 'Agenda');
-        echo '<ul class="space-y-3">';
-        foreach (array_slice($items, 0, $jumlah) as $it) echo '<li class="flex gap-3 items-start rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700"><span class="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-purple-600 shrink-0"></span><span>' . htmlspecialchars($it) . '</span></li>';
-        echo '</ul></div></section>';
+        if ($style === 'timeline') {
+            echo '<div class="max-w-2xl">';
+            foreach ($items as $ai => $it) echo anim_item_html('<div class="relative pl-8 pb-5 border-l-2 border-purple-200 last:pb-0"><span class="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 ring-4 ring-purple-100"></span><span class="text-sm text-slate-700">' . htmlspecialchars($it) . '</span></div>', $animAttr, $ai);
+            echo '</div>';
+        } elseif ($style === 'minimal') {
+            echo '<ul class="divide-y divide-slate-100">';
+            foreach ($items as $ai => $it) echo anim_item_html('<li class="py-3 text-sm font-semibold text-slate-800">' . htmlspecialchars($it) . '</li>', $animAttr, $ai);
+            echo '</ul>';
+        } elseif (in_array($style, ['kartu-2', 'kartu-3', 'kartu-4'], true)) {
+            $cols = $style === 'kartu-2' ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3';
+            echo '<div class="grid gap-4 ' . $cols . '">';
+            foreach ($items as $ai => $it) echo anim_item_html('<div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700"><span class="mb-1 inline-block h-2.5 w-2.5 rounded-full bg-purple-600"></span><br>' . htmlspecialchars($it) . '</div>', $animAttr, $ai);
+            echo '</div>';
+        } elseif ($style === 'overlay') {
+            echo '<div class="rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white"><ul class="space-y-2">';
+            foreach ($items as $ai => $it) echo anim_item_html('<li class="text-sm">• ' . htmlspecialchars($it) . '</li>', $animAttr, $ai);
+            echo '</ul></div>';
+        } else {
+            echo '<ul class="space-y-3">';
+            foreach ($items as $ai => $it) echo anim_item_html('<li class="flex gap-3 items-start rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700"><span class="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-purple-600 shrink-0"></span><span>' . htmlspecialchars($it) . '</span></li>', $animAttr, $ai);
+            echo '</ul>';
+        }
+        echo '</div></section>';
         return;
     }
 
@@ -656,35 +745,40 @@ function render_home_section(mysqli $conn, array $sec): void
         if ($judul !== '') echo section_header_html($judul);
         if ($style === 'masonry') {
             echo '<div class="columns-2 md:columns-3 gap-4">';
-            foreach ($galeri as $g) echo '<div class="break-inside-avoid mb-4 overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full object-cover hover:scale-105 transition duration-500"></div>';
+            foreach ($galeri as $gi => $g) echo anim_item_html('<div class="break-inside-avoid mb-4 overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full object-cover hover:scale-105 transition duration-500"></div>', $animAttr, $gi);
             echo '</div>';
         } elseif ($style === 'sorotan-list' || $style === 'magazine') {
             $first = $galeri[0];
             $rest = array_slice($galeri, 1, 4);
-            echo '<div class="grid gap-4 lg:grid-cols-2"><div class="overflow-hidden rounded-2xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($first)) . '" alt="" class="w-full h-full min-h-[280px] object-cover"></div>';
+            echo '<div class="grid gap-4 lg:grid-cols-2">' . anim_item_html('<div class="overflow-hidden rounded-2xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($first)) . '" alt="" class="w-full h-full min-h-[280px] object-cover"></div>', $animAttr, 0);
             echo '<div class="grid grid-cols-2 gap-4">';
-            foreach ($rest as $g) echo '<div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover hover:scale-105 transition duration-500"></div>';
+            foreach ($rest as $gi => $g) echo anim_item_html('<div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover hover:scale-105 transition duration-500"></div>', $animAttr, $gi + 1);
             echo '</div></div>';
         } elseif ($style === 'kartu-horizontal' || $style === 'list') {
             echo '<div class="grid gap-4 md:grid-cols-2">';
-            foreach ($galeri as $g) echo '<div class="flex gap-4 items-center rounded-2xl bg-white border border-slate-200 p-3 shadow-sm"><div class="w-32 h-24 shrink-0 overflow-hidden rounded-xl' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full h-full object-cover"></div><div class="text-sm font-bold text-slate-700">Galeri</div></div>';
+            foreach ($galeri as $gi => $g) echo anim_item_html('<div class="flex gap-4 items-center rounded-2xl bg-white border border-slate-200 p-3 shadow-sm"><div class="w-32 h-24 shrink-0 overflow-hidden rounded-xl' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full h-full object-cover"></div><div class="text-sm font-bold text-slate-700">Galeri</div></div>', $animAttr, $gi);
             echo '</div>';
         } elseif ($style === 'timeline') {
             echo '<div class="max-w-2xl">';
-            foreach ($galeri as $i => $g) echo '<div class="relative pl-8 pb-6 border-l-2 border-purple-200 last:pb-0"><span class="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 ring-4 ring-purple-100"></span><div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-video object-cover"></div></div>';
+            foreach ($galeri as $i => $g) echo anim_item_html('<div class="relative pl-8 pb-6 border-l-2 border-purple-200 last:pb-0"><span class="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 ring-4 ring-purple-100"></span><div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-video object-cover"></div></div>', $animAttr, $i);
             echo '</div>';
         } elseif ($style === 'minimal') {
             echo '<div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">';
-            foreach ($galeri as $g) echo '<div class="overflow-hidden rounded-lg' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover"></div>';
+            foreach ($galeri as $gi => $g) echo anim_item_html('<div class="overflow-hidden rounded-lg' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover"></div>', $animAttr, $gi);
             echo '</div>';
         } elseif ($style === 'overlay') {
             echo '<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">';
-            foreach ($galeri as $i => $g) echo '<div class="group relative overflow-hidden rounded-2xl shadow-sm h-56"><div class="absolute inset-0 overflow-hidden' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"></div><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><span class="absolute bottom-3 left-4 text-sm font-black text-white">Foto ' . ($i + 1) . '</span></div>';
+            foreach ($galeri as $i => $g) echo anim_item_html('<div class="group relative overflow-hidden rounded-2xl shadow-sm h-56"><div class="absolute inset-0 overflow-hidden' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"></div><div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div><span class="absolute bottom-3 left-4 text-sm font-black text-white">Foto ' . ($i + 1) . '</span></div>', $animAttr, $i);
             echo '</div>';
         } else {
-            $cols = $style === 'kartu-2' ? 'md:grid-cols-2' : ($style === 'kartu-3' ? 'md:grid-cols-3' : 'md:grid-cols-4');
+            $cols = 'sm:grid-cols-2 xl:grid-cols-4';
+            if ($kolom === 2) $cols = 'md:grid-cols-2';
+            elseif ($kolom === 3) $cols = 'sm:grid-cols-2 md:grid-cols-3';
+            elseif ($kolom >= 5) $cols = 'grid-cols-2 sm:grid-cols-3 xl:grid-cols-' . min(6, $kolom);
+            elseif ($style === 'kartu-2') $cols = 'md:grid-cols-2';
+            elseif ($style === 'kartu-3') $cols = 'sm:grid-cols-2 md:grid-cols-3';
             echo '<div class="grid gap-4 grid-cols-2 ' . $cols . '">';
-            foreach ($galeri as $g) echo '<div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover hover:scale-105 transition duration-500"></div>';
+            foreach ($galeri as $gi => $g) echo anim_item_html('<div class="overflow-hidden rounded-xl shadow-sm' . $gaya . '"><img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="" class="w-full aspect-square object-cover hover:scale-105 transition duration-500"></div>', $animAttr, $gi);
             echo '</div>';
         }
         echo '</section>';
@@ -795,6 +889,284 @@ function render_home_section(mysqli $conn, array $sec): void
     }
 }
 
+function render_sidebar_widgets(mysqli $conn, array $settings, array $sections): void
+{
+    if (empty($sections)) {
+        echo '<aside class="sb-empty rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-8 text-center text-sm text-slate-500">Belum ada widget sidebar.<br>Tambahkan via Admin &gt; Sections &gt; Sidebar.</aside>';
+        return;
+    }
+    echo '<aside class="flex flex-col gap-6 lg:sticky lg:top-40">';
+    foreach ($sections as $sec) render_sidebar_widget($conn, $settings, $sec);
+    echo '</aside>';
+}
+
+function sidebar_card_open(array $sec, string $judul): string
+{
+    $anim = section_anim_attr((string)($sec['animasi'] ?? 'fade-up'));
+    $h = '<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"' . $anim . '>';
+    $label = $judul !== '' ? $judul : (section_widget_meta()[(string)($sec['tipe'] ?? '')]['label'] ?? 'Widget');
+    $h .= '<div class="flex items-center gap-3 border-b border-slate-100 px-5 py-4">'
+        . '<span class="h-7 w-1.5 rounded-full bg-gradient-to-b from-purple-600 to-blue-600"></span>'
+        . '<h3 class="text-base font-black text-slate-900">' . htmlspecialchars($label) . '</h3></div>'
+        . '<div class="p-5">';
+    return $h;
+}
+
+function render_sidebar_widget(mysqli $conn, array $settings, array $sec): void
+{
+    $tipe = (string)($sec['tipe'] ?? 'teks');
+    $judul = trim((string)($sec['judul'] ?? ''));
+    $cfg = array_merge(section_default_cfg($tipe), section_pengaturan($sec));
+
+    if ($tipe === 'search') {
+        $ph = trim((string)section_opt($cfg, 'placeholder', 'Cari berita...'));
+        if ($ph === '') $ph = 'Cari berita...';
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Cari Berita');
+        echo '<form action="cari" method="get" class="relative">'
+            . '<input type="text" name="q" placeholder="' . htmlspecialchars($ph) . '" class="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-purple-400 focus:bg-white focus:ring-2 focus:ring-purple-100">'
+            . '<button type="submit" aria-label="Cari" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600">'
+            . '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>'
+            . '</button></form>';
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'berita_terbaru') {
+        $jumlah = max(1, min(10, (int)section_opt($cfg, 'jumlah', 5)));
+        $katId = (int)section_opt($cfg, 'kategori_id', 0);
+        $withImg = (int)section_opt($cfg, 'tampil_gambar', 1) === 1;
+        $rows = [];
+        if ($katId > 0) {
+            $st = $conn->prepare("SELECT b.*, k.nama AS kategori_nama FROM berita b LEFT JOIN kategori k ON k.id = b.kategori_id WHERE b.kategori_id = ? AND b.status = 'publish' ORDER BY b.tanggal_publikasi DESC, b.id DESC LIMIT $jumlah");
+            $st->bind_param('i', $katId);
+            $st->execute();
+            $res = $st->get_result();
+            while ($r = $res->fetch_assoc()) $rows[] = $r;
+            $st->close();
+        } else {
+            $res = $conn->query("SELECT b.*, k.nama AS kategori_nama FROM berita b LEFT JOIN kategori k ON k.id = b.kategori_id WHERE b.status = 'publish' ORDER BY b.tanggal_publikasi DESC, b.id DESC LIMIT $jumlah");
+            if ($res) while ($r = $res->fetch_assoc()) $rows[] = $r;
+        }
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Berita Terbaru');
+        if (empty($rows)) echo '<p class="text-sm text-slate-500">Belum ada berita.</p>';
+        else {
+            echo '<div class="flex flex-col gap-4">';
+            foreach ($rows as $item) {
+                $url = htmlspecialchars(berita_url($item));
+                $jt = htmlspecialchars($item['judul'] ?? '');
+                $tgl = isset($item['tanggal_publikasi']) ? formatTanggalIndonesia($item['tanggal_publikasi']) : '';
+                $img = berita_image_url($item['gambar'] ?? '');
+                echo '<a href="' . $url . '" class="group flex gap-3">';
+                if ($withImg) {
+                    if ($img !== '') echo '<span class="block h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-110"></span>';
+                    else echo '<span class="block h-16 w-20 shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500"></span>';
+                }
+                echo '<span class="min-w-0"><span class="mb-1 block text-sm font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-purple-700">' . $jt . '</span>'
+                    . '<span class="block text-xs text-slate-500">' . htmlspecialchars($tgl) . '</span></span></a>';
+            }
+            echo '</div>';
+        }
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'populer') {
+        $jumlah = max(1, min(10, (int)section_opt($cfg, 'jumlah', 5)));
+        $rows = [];
+        $res = $conn->query("SELECT b.*, k.nama AS kategori_nama FROM berita b LEFT JOIN kategori k ON k.id = b.kategori_id WHERE b.status = 'publish' ORDER BY b.views DESC, b.id DESC LIMIT $jumlah");
+        if ($res) while ($r = $res->fetch_assoc()) $rows[] = $r;
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Paling Dibaca');
+        if (empty($rows)) echo '<p class="text-sm text-slate-500">Belum ada berita.</p>';
+        else {
+            echo '<ol class="flex flex-col gap-4">';
+            foreach ($rows as $i => $item) {
+                $url = htmlspecialchars(berita_url($item));
+                echo '<li class="flex items-start gap-3"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-sm font-black text-white">' . ($i + 1) . '</span>'
+                    . '<span class="min-w-0"><a href="' . $url . '" class="block text-sm font-bold leading-snug text-slate-900 line-clamp-2 hover:text-purple-700">' . htmlspecialchars($item['judul']) . '</a>'
+                    . '<span class="mt-0.5 block text-xs text-slate-500">' . number_format((int)($item['views'] ?? 0)) . ' dibaca</span></span></li>';
+            }
+            echo '</ol>';
+        }
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'kategori_list') {
+        $jumlah = max(1, min(30, (int)section_opt($cfg, 'jumlah', 10)));
+        $showCount = (int)section_opt($cfg, 'tampil_jumlah', 1) === 1;
+        $kats = [];
+        $res = $conn->query("SELECT k.id, k.nama, (SELECT COUNT(*) FROM berita b WHERE b.kategori_id = k.id AND b.status = 'publish') AS jml FROM kategori k ORDER BY k.nama ASC LIMIT $jumlah");
+        if ($res) while ($r = $res->fetch_assoc()) $kats[] = $r;
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Kategori');
+        if (empty($kats)) echo '<p class="text-sm text-slate-500">Belum ada kategori.</p>';
+        else {
+            echo '<ul class="flex flex-col gap-1">';
+            foreach ($kats as $k) {
+                echo '<li><a href="kategori?kategori=' . (int)$k['id'] . '" class="group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-purple-50 hover:text-purple-700">'
+                    . '<span>' . htmlspecialchars($k['nama']) . '</span>'
+                    . ($showCount ? '<span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-500 group-hover:bg-purple-100 group-hover:text-purple-700">' . (int)$k['jml'] . '</span>' : '')
+                    . '</a></li>';
+            }
+            echo '</ul>';
+        }
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'iklan') {
+        $kode = trim((string)section_opt($cfg, 'kode', ''));
+        if ($kode !== '') {
+            echo sidebar_card_open($sec, $judul);
+            echo '<div class="text-center text-xs text-slate-500">' . $kode . '</div></div></div>';
+            return;
+        }
+        $g = trim((string)section_opt($cfg, 'gambar', ''));
+        if ($g === '') return;
+        $link = trim((string)section_opt($cfg, 'link', ''));
+        $alt = trim((string)section_opt($cfg, 'alt', $judul !== '' ? $judul : 'Iklan'));
+        echo sidebar_card_open($sec, $judul);
+        $img = '<img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="' . htmlspecialchars($alt) . '" class="w-full rounded-xl border border-slate-200 object-cover">';
+        if ($link !== '') echo '<a href="' . htmlspecialchars($link) . '" target="_blank" rel="noopener" class="block">' . $img . '</a>';
+        else echo $img;
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'newsletter') {
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Newsletter');
+        $nd = (string)section_opt($cfg, 'deskripsi', 'Dapatkan info terkini lewat email.');
+        $msg = trim((string)($_GET['nl'] ?? ''));
+        if ($nd !== '') echo '<p class="mb-3 text-sm text-slate-600">' . htmlspecialchars($nd) . '</p>';
+        if ($msg === 'ok') echo '<p class="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700">Berhasil! Email tercatat.</p>';
+        elseif ($msg === 'ada') echo '<p class="mb-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700">Email sudah terdaftar.</p>';
+        elseif ($msg === 'err') echo '<p class="mb-3 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">Email tidak valid.</p>';
+        echo '<form action="newsletter" method="post" class="flex flex-col gap-2"><input type="email" name="email" required placeholder="Email Anda" class="w-full rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-purple-400 focus:bg-white"><button class="rounded-full bg-gradient-to-r from-purple-600 to-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:scale-[1.02] transition">Langganan</button></form>';
+        echo '</div></div>';
+        return;
+    }
+
+    if ($tipe === 'sosmed') {
+        echo sidebar_card_open($sec, $judul !== '' ? $judul : 'Ikuti Kami');
+        $links = sosmed_links($cfg, $settings);
+        $has = $links['facebook'] !== '' || $links['twitter'] !== '' || $links['instagram'] !== '' || $links['youtube'] !== '';
+        if (!$has) echo '<p class="text-sm text-slate-500">Isi link sosmed via Admin &gt; Sections.</p>';
+        else {
+            echo '<div class="flex gap-2">';
+            if ($links['facebook'] !== '') echo '<a href="' . htmlspecialchars($links['facebook']) . '" target="_blank" rel="noopener" aria-label="Facebook" class="flex h-11 w-11 items-center justify-center rounded-full bg-[#1877F2] text-white transition hover:scale-105"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>';
+            if ($links['twitter'] !== '') echo '<a href="' . htmlspecialchars($links['twitter']) . '" target="_blank" rel="noopener" aria-label="X" class="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white transition hover:scale-105"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>';
+            if ($links['instagram'] !== '') echo '<a href="' . htmlspecialchars($links['instagram']) . '" target="_blank" rel="noopener" aria-label="Instagram" class="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 via-pink-600 to-purple-600 text-white transition hover:scale-105"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.31.975.975 1.248 2.242 1.31 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.335 2.633-1.31 3.608-.975.975-2.242 1.248-3.608 1.31-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.335-3.608-1.31-.975-.975-1.248-2.242-1.31-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.335-2.633 1.31-3.608.975-.975 2.242-1.248 3.608-1.31C8.416 2.175 8.796 2.163 12 2.163zM12 0C8.741 0 8.333.014 7.053.072 5.775.131 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.059 1.278.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.278-.059 2.148-.261 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.058-1.28.072-1.687.072-4.947s-.014-3.667-.072-4.947c-.059-1.278-.261-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.014 15.259 0 12 0z"/></svg></a>';
+            if ($links['youtube'] !== '') echo '<a href="' . htmlspecialchars($links['youtube']) . '" target="_blank" rel="noopener" aria-label="YouTube" class="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white transition hover:scale-105"><svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4L15.8 12z"/></svg></a>';
+            echo '</div>';
+        }
+        echo '</div></div>';
+        return;
+    }
+
+    if (in_array($tipe, ['teks', 'html', 'image', 'video'], true)) {
+        if ($tipe === 'html') {
+            $html = (string)section_opt($cfg, 'html', '');
+            if (trim($html) === '') return;
+            echo '<div' . section_anim_attr((string)($sec['animasi'] ?? 'fade-up')) . '>' . $html . '</div>';
+            return;
+        }
+        if ($tipe === 'image') {
+            $g = trim((string)section_opt($cfg, 'gambar', ''));
+            if ($g === '') return;
+            $link = trim((string)section_opt($cfg, 'link', ''));
+            $img = '<img loading="lazy" src="' . htmlspecialchars(berita_image_url($g)) . '" alt="' . htmlspecialchars((string)section_opt($cfg, 'alt', $judul)) . '" class="w-full rounded-2xl border border-slate-200 object-cover shadow-sm">';
+            echo '<div' . section_anim_attr((string)($sec['animasi'] ?? 'fade-up')) . '>';
+            if ($link !== '') echo '<a href="' . htmlspecialchars($link) . '" class="block">' . $img . '</a>';
+            else echo $img;
+            echo '</div>';
+            return;
+        }
+        if ($tipe === 'video') {
+            $url = trim((string)section_opt($cfg, 'video_url', ''));
+            if ($url === '') return;
+            echo sidebar_card_open($sec, $judul);
+            $yt = section_youtube_id($url);
+            echo '<div class="aspect-video overflow-hidden rounded-xl bg-black">';
+            if ($yt !== '') echo '<iframe src="https://www.youtube.com/embed/' . $yt . '" class="h-full w-full" loading="lazy" allowfullscreen title="Video"></iframe>';
+            else echo '<video src="' . htmlspecialchars($url) . '" controls class="h-full w-full"></video>';
+            echo '</div></div></div>';
+            return;
+        }
+        $isi = trim((string)section_opt($cfg, 'isi', ''));
+        if ($isi === '' && $judul === '') return;
+        echo sidebar_card_open($sec, $judul);
+        if ($isi !== '') echo '<div class="text-sm leading-relaxed text-slate-600">' . nl2br(htmlspecialchars($isi)) . '</div>';
+        echo '</div></div>';
+        return;
+    }
+
+    $isi = trim((string)section_opt($cfg, 'isi', $cfg['deskripsi'] ?? ''));
+    if ($isi === '' && $judul === '') return;
+    echo sidebar_card_open($sec, $judul);
+    if ($isi !== '') echo '<div class="text-sm leading-relaxed text-slate-600">' . nl2br(htmlspecialchars($isi)) . '</div>';
+    echo '</div></div>';
+}
+
+function section_parse_links($raw): array
+{
+    $out = [];
+    if (is_array($raw)) {
+        foreach ($raw as $it) {
+            if (is_array($it)) {
+                $label = trim((string)($it['label'] ?? ''));
+                $url = trim((string)($it['url'] ?? ''));
+            } else {
+                $label = trim((string)$it);
+                $url = $label;
+            }
+            if ($label === '' || $url === '') continue;
+            $out[] = ['label' => $label, 'url' => $url];
+        }
+        return $out;
+    }
+    foreach (preg_split('/\r?\n/', (string)$raw) as $line) {
+        $line = trim((string)$line);
+        if ($line === '') continue;
+        if ($line !== '' && $line[0] === '[') {
+            $d = json_decode($line, true);
+            if (json_last_error() === JSON_ERROR_NONE) return section_parse_links($d);
+        }
+        if (strpos($line, '|') !== false) {
+            [$label, $url] = array_map('trim', explode('|', $line, 2));
+        } else {
+            $label = $line;
+            $url = $line;
+        }
+        if ($label === '' || $url === '') continue;
+        $out[] = ['label' => $label, 'url' => $url];
+    }
+    return $out;
+}
+
+function sosmed_links(array $cfg, array $settings): array
+{
+    $get = function ($k, $fallback = null) use ($cfg, $settings) {
+        $v = trim((string)($cfg[$k] ?? ''));
+        if ($v === '' && $fallback !== null) $v = trim((string)($settings[$fallback] ?? ''));
+        return $v;
+    };
+    return [
+        'facebook' => $get('facebook', 'footer_social_facebook'),
+        'twitter' => $get('twitter', 'footer_social_twitter'),
+        'instagram' => $get('instagram', 'footer_social_instagram'),
+        'youtube' => $get('youtube', null),
+    ];
+}
+
+function sosmed_icons_html(array $links, string $size = 'w-10 h-10'): string
+{
+    $h = '';
+    if ($links['facebook'] !== '') $h .= '<a href="' . htmlspecialchars($links['facebook']) . '" target="_blank" rel="noopener" class="' . $size . ' rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="Facebook"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>';
+    if ($links['twitter'] !== '') $h .= '<a href="' . htmlspecialchars($links['twitter']) . '" target="_blank" rel="noopener" class="' . $size . ' rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="X"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>';
+    if ($links['instagram'] !== '') $h .= '<a href="' . htmlspecialchars($links['instagram']) . '" target="_blank" rel="noopener" class="' . $size . ' rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="Instagram"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 1.8A3.7 3.7 0 0 0 3.8 7.5v9a3.7 3.7 0 0 0 3.7 3.7h9a3.7 3.7 0 0 0 3.7-3.7v-9a3.7 3.7 0 0 0-3.7-3.7h-9ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0 1.8a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4Zm5.2-3.2a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg></a>';
+    if ($links['youtube'] !== '') $h .= '<a href="' . htmlspecialchars($links['youtube']) . '" target="_blank" rel="noopener" class="' . $size . ' rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="YouTube"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4L15.8 12z"/></svg></a>';
+    return $h;
+}
+
 function render_footer_sections(mysqli $conn, array $settings, array $navKategoris, array $sections): void
 {
     if (empty($sections)) {
@@ -809,12 +1181,11 @@ function render_footer_sections(mysqli $conn, array $settings, array $navKategor
     foreach ($top as $sec) render_footer_widget($conn, $settings, $navKategoris, $sec);
     echo '</div>';
     foreach ($bottoms as $sec) {
-        echo '<div class="border-t border-slate-700 pt-8"' . section_anim_attr((string)($sec['animasi'] ?? 'fade')) . '>';
-        echo '<div class="flex flex-col md:flex-row justify-between items-center gap-4">';
-        echo '<p class="text-sm text-slate-400">&copy; ' . date('Y') . ' ' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita') . '. Semua hak dilindungi.</p>';
         $note = trim((string)section_opt(section_pengaturan($sec), 'isi', ''));
-        if ($note !== '') echo '<p class="text-sm text-slate-500">' . htmlspecialchars($note) . '</p>';
-        echo '</div></div>';
+        echo '<div class="text-center pt-8"' . section_anim_attr((string)($sec['animasi'] ?? 'fade')) . '>';
+        $desc = $note !== '' ? ' ' . htmlspecialchars($note) : '';
+        echo '<p class="text-sm text-slate-400">&copy; ' . date('Y') . ' ' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita') . '.' . $desc . '</p>';
+        echo '</div>';
     }
 }
 
@@ -835,25 +1206,33 @@ function render_footer_widget(mysqli $conn, array $settings, array $navKategoris
     }
 
     if ($tipe === 'brand') {
-        $desc = (string)section_opt($cfg, 'deskripsi', '');
+        $logo = trim((string)section_opt($cfg, 'logo', ''));
+        if ($logo === '') $logo = trim((string)($settings['logo_path'] ?? ''));
+        $desc = trim((string)section_opt($cfg, 'deskripsi', ''));
         if ($desc === '') $desc = (string)($settings['site_tagline'] ?? 'Berita terkini dan terpercaya');
+        if ($logo !== '') echo '<img loading="lazy" src="' . htmlspecialchars(berita_image_url($logo)) . '" alt="' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita') . '" class="mb-3 h-12 w-auto rounded-lg bg-white/95 p-1">';
         echo '<h3 class="text-2xl font-black mb-3 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita') . '</h3>';
-        echo '<p class="text-sm text-slate-300 leading-relaxed">' . htmlspecialchars($desc) . '</p>';
-        echo '<div class="flex gap-3 mt-4">';
-        $fb = $settings['footer_social_facebook'] ?? null;
-        $tw = $settings['footer_social_twitter'] ?? null;
-        $ig = $settings['footer_social_instagram'] ?? null;
-        if (!empty($fb)) echo '<a href="' . htmlspecialchars($fb) . '" target="_blank" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="Facebook"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>';
-        if (!empty($tw)) echo '<a href="' . htmlspecialchars($tw) . '" target="_blank" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="X"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>';
-        if (!empty($ig)) echo '<a href="' . htmlspecialchars($ig) . '" target="_blank" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-purple-600 transition" aria-label="Instagram"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.31.975.975 1.248 2.242 1.31 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.335 2.633-1.31 3.608-.975.975-2.242 1.248-3.608 1.31-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.335-3.608-1.31-.975-.975-1.248-2.242-1.31-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.335-2.633 1.31-3.608.975-.975 2.242-1.248 3.608-1.31C8.416 2.175 8.796 2.163 12 2.163zM12 0C8.741 0 8.333.014 7.053.072 5.775.131 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.059 1.278.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.278-.059 2.148-.261 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.058-1.28.072-1.687.072-4.947s-.014-3.667-.072-4.947c-.059-1.278-.261-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.014 15.259 0 12 0z"/></svg></a>';
-        echo '</div>';
+        if ($desc !== '') echo '<p class="text-sm text-slate-300 leading-relaxed">' . htmlspecialchars($desc) . '</p>';
     } elseif ($tipe === 'links') {
         echo '<h4 class="text-sm font-black uppercase tracking-wider text-white mb-4">' . htmlspecialchars($judul !== '' ? $judul : 'Tautan Cepat') . '</h4><div class="space-y-2">';
-        echo '<a href="index" class="block text-sm text-slate-300 hover:text-purple-400 transition">Beranda</a>';
-        foreach ($navKategoris as $ft) {
-            echo '<a href="kategori?kategori=' . (int)$ft['id'] . '" class="block text-sm text-slate-300 hover:text-purple-400 transition">' . htmlspecialchars($ft['nama']) . '</a>';
+        $manual = section_parse_links((string)section_opt($cfg, 'tautan', ''));
+        if (!empty($manual)) {
+            foreach ($manual as $t) {
+                echo '<a href="' . htmlspecialchars($t['url']) . '" class="block text-sm text-slate-300 hover:text-purple-400 transition">' . htmlspecialchars($t['label']) . '</a>';
+            }
+        } else {
+            echo '<a href="index" class="block text-sm text-slate-300 hover:text-purple-400 transition">Beranda</a>';
+            foreach ($navKategoris as $ft) {
+                echo '<a href="kategori?kategori=' . (int)$ft['id'] . '" class="block text-sm text-slate-300 hover:text-purple-400 transition">' . htmlspecialchars($ft['nama']) . '</a>';
+            }
         }
         echo '</div>';
+    } elseif ($tipe === 'sosmed') {
+        $links = sosmed_links($cfg, $settings);
+        echo '<h4 class="text-sm font-black uppercase tracking-wider text-white mb-4">' . htmlspecialchars($judul !== '' ? $judul : 'Ikuti Kami') . '</h4>';
+        $icons = sosmed_icons_html($links);
+        if ($icons !== '') echo '<div class="flex gap-3">' . $icons . '</div>';
+        else echo '<p class="text-sm text-slate-400">Isi link sosmed via Admin &gt; Sections &gt; Footer.</p>';
     } elseif ($tipe === 'contact') {
         echo '<h4 class="text-sm font-black uppercase tracking-wider text-white mb-4">' . htmlspecialchars($judul !== '' ? $judul : 'Informasi') . '</h4><div class="space-y-3 text-sm text-slate-300">';
         if (!empty($settings['footer_address'])) echo '<div class="flex items-start gap-3"><span class="text-purple-400">◉</span><span>' . nl2br(htmlspecialchars($settings['footer_address'])) . '</span></div>';

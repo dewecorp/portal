@@ -98,11 +98,6 @@ function render_berita_form(array $kategoris, array $data, string $action, int $
                     <textarea name="isi" class="js-ckeditor w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700" rows="36" data-editor-height="1080"><?php echo htmlspecialchars(berita_field($data, 'isi')); ?></textarea>
                 </div>
             </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <label class="mb-2 block text-sm font-extrabold text-slate-700">Kutipan / Ringkasan</label>
-                <textarea name="ringkasan" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-100" rows="4" placeholder="Ringkasan singkat yang muncul di halaman detail atau daftar berita."><?php echo htmlspecialchars(berita_field($data, 'ringkasan')); ?></textarea>
-            </div>
         </section>
 
         <aside class="space-y-5">
@@ -242,6 +237,31 @@ if ($action === 'delete' && $id > 0) {
     }
 
     header('Location: berita' . ($ok ? '?success=delete' : ''));
+    exit;
+}
+
+// Bulk delete
+if ($action === 'bulk_delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $raw = (string)($_POST['ids'] ?? '');
+    $ids = array_values(array_filter(array_map('intval', explode(',', $raw))));
+    $deleted = 0;
+    foreach ($ids as $bid) {
+        if ($bid <= 0) continue;
+        $stmt = $conn->prepare("SELECT gambar FROM berita WHERE id = ?");
+        $stmt->bind_param('i', $bid);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($row && !empty($row['gambar'])) {
+            delete_uploaded_file($row['gambar']);
+        }
+        $stmt = $conn->prepare("DELETE FROM berita WHERE id = ?");
+        $stmt->bind_param('i', $bid);
+        if ($stmt->execute() && $stmt->affected_rows > 0) $deleted++;
+        $stmt->close();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['success' => true, 'deleted' => $deleted, 'message' => "Berhasil menghapus $deleted berita."]);
     exit;
 }
 
@@ -439,11 +459,17 @@ if (in_array($action, ['add', 'edit'], true)) {
 <?php endif; ?>
 
 <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <h2 class="mb-4 text-base font-extrabold text-slate-950">Daftar Berita</h2>
+    <div class="mb-4 flex items-center justify-between gap-3">
+        <h2 class="m-0 text-base font-extrabold text-slate-950">Daftar Berita</h2>
+        <button type="button" id="bulkDeleteBtn" disabled class="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40">
+            <?php echo ui_icon('trash', 'w-4 h-4'); ?> Hapus Terpilih (<span id="bulkCount">0</span>)
+        </button>
+    </div>
     <div class="overflow-x-auto">
         <table class="w-full min-w-[760px] text-left text-sm">
             <thead>
             <tr class="border-b border-slate-200 text-xs font-black uppercase tracking-wide text-slate-500">
+                <th class="w-10 px-3 py-3"><input type="checkbox" id="bulkAll" class="h-4 w-4 rounded border-slate-300 accent-teal-600" title="Pilih semua"></th>
                 <th class="px-3 py-3">#</th>
                 <th class="px-3 py-3">Judul</th>
                 <th class="px-3 py-3">Kategori</th>
@@ -454,10 +480,11 @@ if (in_array($action, ['add', 'edit'], true)) {
             </thead>
             <tbody class="divide-y divide-slate-100">
             <?php if (empty($beritaList)): ?>
-                <tr><td colspan="6" class="px-3 py-8 text-center font-semibold text-slate-400">Belum ada berita.</td></tr>
+                <tr><td colspan="7" class="px-3 py-8 text-center font-semibold text-slate-400">Belum ada berita.</td></tr>
             <?php else: ?>
                 <?php foreach ($beritaList as $index => $item): ?>
                     <tr class="text-slate-700">
+                        <td class="px-3 py-3"><input type="checkbox" class="bulk-cb h-4 w-4 rounded border-slate-300 accent-teal-600" value="<?php echo (int)$item['id']; ?>"></td>
                         <td class="px-3 py-3 font-bold"><?php echo $index + 1; ?></td>
                         <td class="px-3 py-3 font-bold text-slate-950"><?php echo htmlspecialchars($item['judul']); ?></td>
                         <td class="px-3 py-3"><?php echo htmlspecialchars($item['kategori_nama'] ?? '-'); ?></td>
@@ -471,9 +498,9 @@ if (in_array($action, ['add', 'edit'], true)) {
                         <td class="px-3 py-3"><?php echo $item['tanggal_publikasi'] ? date('d M Y H:i', strtotime($item['tanggal_publikasi'])) : '-'; ?></td>
                         <td class="px-3 py-3">
                             <div class="flex justify-end gap-2">
-                                <a href="../<?php echo htmlspecialchars(berita_url($item)); ?>" target="_blank" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50">Lihat</a>
-                                <a href="berita?action=edit&id=<?php echo (int)$item['id']; ?>" class="rounded-lg border border-blue-200 px-3 py-1.5 text-xs font-bold text-blue-600 transition hover:bg-blue-50">Edit</a>
-                                <button type="button" class="btn-delete-berita rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 transition hover:bg-red-50" data-id="<?php echo (int)$item['id']; ?>" data-judul="<?php echo htmlspecialchars($item['judul']); ?>">Hapus</button>
+                                <a href="../<?php echo htmlspecialchars(berita_url($item)); ?>" target="_blank" title="Lihat" aria-label="Lihat" class="btn-icon btn-view"><?php echo ui_icon('eye', 'w-5 h-5'); ?></a>
+                                <a href="berita?action=edit&id=<?php echo (int)$item['id']; ?>" title="Ubah" aria-label="Ubah" class="btn-icon btn-edit"><?php echo ui_icon('edit', 'w-5 h-5'); ?></a>
+                                <button type="button" title="Hapus" aria-label="Hapus" class="btn-icon btn-del btn-delete-berita" data-id="<?php echo (int)$item['id']; ?>" data-judul="<?php echo htmlspecialchars($item['judul']); ?>"><?php echo ui_icon('trash', 'w-5 h-5'); ?></button>
                             </div>
                         </td>
                     </tr>
@@ -514,6 +541,57 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+
+    var cbs = Array.prototype.slice.call(document.querySelectorAll('.bulk-cb'));
+    var all = document.getElementById('bulkAll');
+    var btn = document.getElementById('bulkDeleteBtn');
+    var countEl = document.getElementById('bulkCount');
+
+    function refresh() {
+        var sel = cbs.filter(function (c) { return c.checked; }).length;
+        if (all) all.checked = cbs.length > 0 && sel === cbs.length;
+        if (countEl) countEl.textContent = sel;
+        if (btn) btn.disabled = sel === 0;
+    }
+
+    cbs.forEach(function (c) { c.addEventListener('change', refresh); });
+    if (all) all.addEventListener('change', function () {
+        cbs.forEach(function (c) { c.checked = all.checked; });
+        refresh();
+    });
+
+    if (btn) btn.addEventListener('click', function () {
+        var sel = cbs.filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+        if (!sel.length) return;
+        Swal.fire({
+            title: 'Hapus ' + sel.length + ' Berita?',
+            text: 'Berita yang dipilih akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            fetch('berita?action=bulk_delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body: 'ids=' + encodeURIComponent(sel.join(','))
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.success) {
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: d.message || 'Berita berhasil dihapus', timer: 1800, showConfirmButton: false }).then(function () { location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal!', text: d.error || 'Gagal menghapus berita' });
+                }
+            })
+            .catch(function () { Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan saat menghapus berita' }); });
+        });
+    });
+
+    refresh();
 });
 </script>
 

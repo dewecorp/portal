@@ -174,61 +174,62 @@ foreach ($menus as $menuItem) {
     $menusByParent[$parentKey][] = $menuItem;
 }
 
+function menu_slug_path(array $menu): string
+{
+    $slug = trim((string)($menu['slug'] ?? ''));
+    if ($slug === '') return '/';
+    return '/' . ltrim($slug, '/');
+}
+
+function menu_type_label(string $type): string
+{
+    if ($type === 'dropdown') return 'Dropdown';
+    if ($type === 'mega') return 'Mega';
+    return 'Link';
+}
+
 function render_menu_builder_items(array $menusByParent, int $parentId = 0, int $level = 0): void
 {
     foreach ($menusByParent[$parentId] ?? [] as $menu) {
         $menuId = (int)$menu['id'];
-        $typeLabel = 'Link';
-        if (($menu['menu_type'] ?? 'link') === 'dropdown') {
-            $typeLabel = 'Dropdown';
-        } elseif (($menu['menu_type'] ?? 'link') === 'mega') {
-            $typeLabel = 'Mega';
-        }
+        $type = (string)($menu['menu_type'] ?? 'link');
+        $typeLabel = menu_type_label($type);
+        $isActive = (int)($menu['is_active'] ?? 1) === 1;
         ?>
         <div class="menu-builder-item" draggable="true" data-id="<?php echo $menuId; ?>">
             <div class="menu-builder-row">
-                <button type="button" class="menu-drag-handle" aria-label="Geser menu">
-                    <i class="bi bi-grip-vertical"></i>
-                </button>
+                <button type="button" class="menu-drag-handle" aria-label="Geser menu" tabindex="-1"><?php echo ui_icon('grip', 'w-4 h-4'); ?></button>
                 <div class="menu-builder-content">
                     <div class="menu-builder-title"><?php echo htmlspecialchars($menu['nama']); ?></div>
                     <div class="menu-builder-meta">
-                        <span><?php echo htmlspecialchars($typeLabel); ?></span>
-                        <span><?php echo (int)$menu['is_active'] === 1 ? 'Aktif' : 'Nonaktif'; ?></span>
-                        <span><?php echo htmlspecialchars($menu['slug']); ?></span>
+                        <span class="menu-slug"><?php echo htmlspecialchars(menu_slug_path($menu)); ?></span>
+                        <span class="menu-badge"><?php echo (int)($menu['parent_id'] ?? 0) > 0 ? 'anak menu' : 'tab sama'; ?></span>
                     </div>
                 </div>
                 <div class="menu-builder-actions">
-                    <?php if ((int)($menu['parent_id'] ?? 0) > 0): ?>
-                        <button type="button" class="btn-make-root inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700" title="Jadikan menu utama" aria-label="Jadikan menu utama">
-                            <svg class="h-4 w-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 11.5 12 4l9 7.5M5 10v10h14V10M9 20v-6h6v6M12 4v12m0 0-3-3m3 3 3-3"></path>
-                            </svg>
-                            <span>Menu Utama</span>
-                        </button>
-                    <?php endif; ?>
-                    <a href="menu?action=edit&id=<?php echo $menuId; ?>" class="btn btn-sm btn-outline-primary"
+                    <button type="button" class="menu-nav" data-nav="up" title="Naik" aria-label="Naik"><?php echo ui_icon('chev-up', 'w-4 h-4'); ?></button>
+                    <button type="button" class="menu-nav" data-nav="down" title="Turun" aria-label="Turun"><?php echo ui_icon('chev-down', 'w-4 h-4'); ?></button>
+                    <a href="menu?action=edit&id=<?php echo $menuId; ?>" class="menu-act" title="Ubah"
                        data-modal-open="modalEditMenu"
                        data-id="<?php echo $menuId; ?>"
                        data-nama="<?php echo htmlspecialchars($menu['nama']); ?>"
                        data-slug="<?php echo htmlspecialchars($menu['slug']); ?>"
                        data-urutan="<?php echo (int)$menu['urutan']; ?>"
                        data-parent="<?php echo (int)($menu['parent_id'] ?? 0); ?>"
-                       data-type="<?php echo htmlspecialchars($menu['menu_type'] ?? 'link'); ?>"
+                       data-type="<?php echo htmlspecialchars($type); ?>"
                        data-active="<?php echo (int)$menu['is_active']; ?>"
                        data-kategori="<?php echo (int)($menu['kategori_id'] ?? 0); ?>">
-                        <i class="bi bi-pencil"></i>
+                        <?php echo ui_icon('edit', 'w-4 h-4'); ?>
                     </a>
-                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-menu" data-id="<?php echo $menuId; ?>" data-nama="<?php echo htmlspecialchars($menu['nama']); ?>">
-                        <i class="bi bi-trash"></i>
+                    <button type="button" class="menu-act danger btn-delete-menu" data-id="<?php echo $menuId; ?>" data-nama="<?php echo htmlspecialchars($menu['nama']); ?>" title="Hapus">
+                        <?php echo ui_icon('trash', 'w-4 h-4'); ?>
                     </button>
                 </div>
             </div>
-            <?php if ($level === 0): ?>
-                <div class="menu-dropzone menu-child-dropzone" data-parent="<?php echo $menuId; ?>">
-                    <?php render_menu_builder_items($menusByParent, $menuId, $level + 1); ?>
-                </div>
-            <?php endif; ?>
+            <div class="menu-dropzone menu-child-dropzone" data-parent="<?php echo $menuId; ?>">
+                <span class="menu-drop-hint">Seret ke sini untuk jadikan anak menu</span>
+                <?php render_menu_builder_items($menusByParent, $menuId, $level + 1); ?>
+            </div>
         </div>
         <?php
     }
@@ -245,7 +246,7 @@ include __DIR__ . '/header.php';
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">Menu Navigasi</h1>
     <a href="menu?action=add" class="btn btn-primary btn-sm" data-modal-open="modalTambahMenu">
-        <i class="bi bi-plus-lg me-1"></i> Tambah Menu
+        <span style="display:inline-flex;vertical-align:-2px;margin-right:6px;"><?php echo ui_icon('plus', 'w-4 h-4'); ?></span>Tambah Menu
     </a>
 </div>
 
@@ -454,53 +455,45 @@ include __DIR__ . '/header.php';
     .menu-builder-board {
         border: 1px solid #e2e8f0;
         border-radius: 18px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        background: #fff;
         box-shadow: 0 18px 45px rgba(15, 23, 42, .06);
         padding: 18px;
     }
-    .menu-dropzone {
-        min-height: 18px;
-        border-radius: 14px;
-        transition: background .18s ease, box-shadow .18s ease;
-    }
+    .menu-dropzone { border-radius: 14px; }
     .menu-root-dropzone {
         display: grid;
         gap: 12px;
+        min-height: 60px;
     }
     .menu-child-dropzone {
-        margin: 10px 0 0 42px;
-        padding: 8px 0 2px 12px;
+        margin: 8px 0 2px 28px;
+        padding: 0 0 0 14px;
         border-left: 2px dashed #cbd5e1;
+        display: grid;
+        gap: 10px;
+        min-height: 44px;
     }
-    .menu-dropzone.is-over {
-        background: #eef2ff;
-        box-shadow: inset 0 0 0 2px #a78bfa;
-    }
-    .menu-dropzone:empty::before {
-        content: 'Taruh submenu di sini';
+    .menu-dropzone.is-over { background: #f1f5f9; }
+    .menu-dropzone.is-over .menu-drop-hint { border-color: #0f9f94; color: #0b8077; background: #ecfdf5; }
+    .menu-drop-hint {
         display: block;
-        border: 1px dashed #cbd5e1;
+        border: 1.5px dashed #cbd5e1;
         border-radius: 12px;
         color: #94a3b8;
         font-size: 12px;
-        font-weight: 700;
+        font-weight: 600;
         padding: 10px 12px;
-    }
-    .menu-root-dropzone:empty::before {
-        content: 'Taruh menu utama di sini';
+        text-align: center;
+        background: #fbfdff;
     }
     .menu-drop-placeholder {
-        height: 48px;
-        border: 2px dashed #8b5cf6;
+        height: 52px;
+        border: 2px dashed #0f9f94;
         border-radius: 14px;
-        background: #f5f3ff;
+        background: #ecfdf5;
     }
-    .menu-builder-item {
-        border-radius: 14px;
-    }
-    .menu-builder-item.is-dragging {
-        opacity: .45;
-    }
+    .menu-builder-item { border-radius: 14px; }
+    .menu-builder-item.is-dragging { opacity: .45; }
     .menu-builder-row {
         display: flex;
         align-items: center;
@@ -508,9 +501,31 @@ include __DIR__ . '/header.php';
         border: 1px solid #e2e8f0;
         border-radius: 14px;
         background: #fff;
-        padding: 12px;
+        padding: 12px 14px;
     }
     .menu-drag-handle {
+        border: 0;
+        background: transparent;
+        color: #cbd5e1;
+        font-size: 15px;
+        letter-spacing: 1px;
+        cursor: grab;
+        padding: 4px;
+    }
+    .menu-builder-content { min-width: 0; flex: 1; }
+    .menu-builder-title { font-weight: 800; color: #0f172a; font-size: 15px; }
+    .menu-builder-meta { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+    .menu-slug { color: #94a3b8; font-size: 12px; font-family: ui-monospace, monospace; }
+    .menu-badge {
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+    }
+    .menu-builder-actions { display: flex; align-items: center; gap: 6px; }
+    .menu-nav, .menu-act {
         width: 34px;
         height: 34px;
         display: inline-flex;
@@ -518,43 +533,18 @@ include __DIR__ . '/header.php';
         justify-content: center;
         border: 1px solid #e2e8f0;
         border-radius: 10px;
-        background: #f8fafc;
-        color: #64748b;
-        cursor: grab;
+        background: #fff;
+        color: #475569;
+        font-size: 14px;
+        cursor: pointer;
+        transition: .15s;
     }
-    .menu-builder-content {
-        min-width: 0;
-        flex: 1;
-    }
-    .menu-builder-title {
-        font-weight: 800;
-        color: #0f172a;
-    }
-    .menu-builder-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 4px;
-    }
-    .menu-builder-meta span {
-        border-radius: 999px;
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 8px;
-    }
-    .menu-builder-actions {
-        display: flex;
-        gap: 6px;
-    }
-    .btn-make-root {
-        white-space: nowrap;
-    }
+    .menu-nav:hover, .menu-act:hover { border-color: #0f9f94; color: #0b8077; }
+    .menu-act.danger { color: #dc2626; }
+    .menu-act.danger:hover { border-color: #fca5a5; background: #fef2f2; }
     @media (max-width: 640px) {
-        .menu-builder-row { align-items: flex-start; }
-        .menu-builder-actions { flex-direction: column; }
-        .menu-child-dropzone { margin-left: 20px; }
+        .menu-builder-row { align-items: flex-start; flex-wrap: wrap; }
+        .menu-child-dropzone { margin-left: 14px; }
     }
 </style>
 
@@ -565,7 +555,7 @@ include __DIR__ . '/header.php';
             <p class="text-muted small mb-0">Geser ke area Menu Utama untuk menjadi induk. Geser ke kotak submenu di bawah item untuk menjadi anak menu.</p>
         </div>
         <button type="button" class="btn btn-primary btn-sm" id="btnSaveMenuOrder">
-            <i class="bi bi-save me-1"></i> Simpan Urutan
+            <span style="display:inline-flex;vertical-align:-2px;margin-right:6px;"><?php echo ui_icon('save', 'w-4 h-4'); ?></span>Simpan Urutan
         </button>
     </div>
     <?php if (empty($menus)): ?>
@@ -712,6 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     var draggedItem = null;
+    var draggedId = 0;
     var placeholder = document.createElement('div');
     placeholder.className = 'menu-drop-placeholder';
 
@@ -727,15 +718,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
     }
 
-    function isInvalidDrop(targetZone) {
-        if (!draggedItem || !targetZone) return true;
-        if (draggedItem.contains(targetZone)) return true;
-        var targetParentId = parseInt(targetZone.getAttribute('data-parent') || '0', 10);
-        var childZone = draggedItem.querySelector(':scope > .menu-child-dropzone');
-        var hasChildren = childZone && childZone.querySelector(':scope > .menu-builder-item');
-        return targetParentId > 0 && hasChildren;
-    }
-
     function clearDropState() {
         document.querySelectorAll('.menu-dropzone.is-over').forEach(function(zone) {
             zone.classList.remove('is-over');
@@ -745,28 +727,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    document.querySelectorAll('.menu-builder-item').forEach(function(item) {
+    function bindDrag(item) {
+        if (item._dragBound) return;
+        item._dragBound = true;
         item.addEventListener('dragstart', function(event) {
+            if (event.target.closest && event.target.closest('.menu-nav, .menu-act')) { event.preventDefault(); return; }
             draggedItem = item;
+            draggedId = parseInt(item.getAttribute('data-id') || '0', 10) || 0;
             item.classList.add('is-dragging');
             if (event.dataTransfer) {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', item.getAttribute('data-id') || '');
+                try { event.dataTransfer.effectAllowed = 'copyMove'; } catch (x) {}
+                try { event.dataTransfer.setData('text/menu-id', String(draggedId)); } catch (x) {}
+                try { event.dataTransfer.setData('text/plain', 'menu:' + draggedId); } catch (x) {}
             }
         });
-
         item.addEventListener('dragend', function() {
             item.classList.remove('is-dragging');
             clearDropState();
             draggedItem = null;
+            draggedId = 0;
         });
-    });
+    }
 
-    document.querySelectorAll('.menu-dropzone').forEach(function(zone) {
+    function bindZone(zone) {
+        if (zone._dropBound) return;
+        zone._dropBound = true;
         zone.addEventListener('dragover', function(e) {
-            if (!draggedItem || isInvalidDrop(zone)) return;
             e.preventDefault();
             e.stopPropagation();
+            try { e.dataTransfer.dropEffect = 'move'; } catch (x) {}
             zone.classList.add('is-over');
             var afterElement = getDragAfterElement(zone, e.clientY);
             if (afterElement == null) {
@@ -775,23 +764,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 zone.insertBefore(placeholder, afterElement);
             }
         });
-
         zone.addEventListener('dragleave', function(e) {
-            if (!zone.contains(e.relatedTarget) && placeholder.parentNode !== zone) {
-                zone.classList.remove('is-over');
-            }
+            if (!zone.contains(e.relatedTarget)) zone.classList.remove('is-over');
         });
-
         zone.addEventListener('drop', function(e) {
-            if (!draggedItem || isInvalidDrop(zone)) return;
             e.preventDefault();
             e.stopPropagation();
-            if (placeholder.parentNode === zone) {
-                zone.insertBefore(draggedItem, placeholder);
-            } else {
-                zone.appendChild(draggedItem);
+            var id = draggedId;
+            if (!id) {
+                try {
+                    var p = e.dataTransfer.getData('text/plain') || '';
+                    if (p.indexOf('menu:') === 0) id = parseInt(p.slice(5), 10) || 0;
+                } catch (x) {}
+            }
+            var node = draggedItem || (id ? document.querySelector('.menu-builder-item[data-id="' + id + '"]') : null);
+            if (node) {
+                // Cegah induk masuk ke anaknya sendiri.
+                if (node.contains(zone)) { clearDropState(); return; }
+                if (placeholder.parentNode === zone) zone.insertBefore(node, placeholder);
+                else zone.appendChild(node);
             }
             clearDropState();
+            draggedItem = null;
+            draggedId = 0;
+        });
+    }
+
+    document.querySelectorAll('.menu-builder-item').forEach(bindDrag);
+    document.querySelectorAll('.menu-dropzone').forEach(bindZone);
+
+    // Panah naik/turun sebaris: geser dalam zona yang sama.
+    document.querySelectorAll('.menu-builder-item').forEach(function(item) {
+        item.querySelectorAll('.menu-nav').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var zone = item.parentNode;
+                var sibs = Array.prototype.slice.call(zone.querySelectorAll(':scope > .menu-builder-item'));
+                var i = sibs.indexOf(item);
+                var j = btn.getAttribute('data-nav') === 'up' ? i - 1 : i + 1;
+                if (i === -1 || j < 0 || j >= sibs.length) return;
+                if (btn.getAttribute('data-nav') === 'up') zone.insertBefore(item, sibs[j]);
+                else zone.insertBefore(sibs[j], item);
+            });
         });
     });
 
@@ -810,15 +825,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var saveOrderButton = document.getElementById('btnSaveMenuOrder');
     var rootZone = document.getElementById('menuRootDropzone');
-    document.querySelectorAll('.btn-make-root').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var item = button.closest('.menu-builder-item');
-            if (item && rootZone) {
-                rootZone.appendChild(item);
-                button.remove();
-            }
-        });
-    });
 
     if (saveOrderButton && rootZone) {
         saveOrderButton.addEventListener('click', function() {
@@ -855,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .finally(function() {
                 saveOrderButton.disabled = false;
-                saveOrderButton.innerHTML = '<i class="bi bi-save me-1"></i> Simpan Urutan';
+                saveOrderButton.innerHTML = <?php echo json_encode(ui_icon('save', 'w-4 h-4') . ' Simpan Urutan'); ?>;
             });
         });
     }

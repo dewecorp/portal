@@ -132,25 +132,10 @@ include __DIR__ . '/header.php';
 
 <?php
 $currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-$latestNews = [];
 $relatedNews = [];
 $komentarList = [];
 $jmlKomentar = 0;
 if ($berita) {
-    $latestNewsLimit = max(1, min(20, (int)($settings['latest_news_count'] ?? 5)));
-    $latestStmt = $conn->prepare("SELECT b.id, b.judul, b.slug, b.gambar, b.tanggal_publikasi, k.nama AS kategori_nama
-                                  FROM berita b
-                                  LEFT JOIN kategori k ON k.id = b.kategori_id
-                                  WHERE b.status = 'publish' AND b.id <> ?
-                                  ORDER BY b.tanggal_publikasi DESC, b.id DESC
-                                  LIMIT $latestNewsLimit");
-    $latestStmt->bind_param('i', $id);
-    $latestStmt->execute();
-    $latestResult = $latestStmt->get_result();
-    while ($latestRow = $latestResult->fetch_assoc()) {
-        $latestNews[] = $latestRow;
-    }
-    $latestStmt->close();
     $katId = (int)($berita['kategori_id'] ?? 0);
     if ($katId > 0) {
         $relStmt = $conn->prepare("SELECT b.id, b.judul, b.slug, b.gambar, b.tanggal_publikasi FROM berita b WHERE b.status='publish' AND b.id <> ? AND b.kategori_id = ? ORDER BY b.tanggal_publikasi DESC, b.id DESC LIMIT 4");
@@ -167,9 +152,6 @@ if ($berita) {
     while ($kr = $kmRes->fetch_assoc()) $komentarList[] = $kr;
     $kmStmt->close();
     $jmlKomentar = count($komentarList);
-    $popRes = $conn->query("SELECT id, judul, slug, gambar, tanggal_publikasi, views FROM berita WHERE status='publish' AND id <> " . $id . " ORDER BY views DESC, id DESC LIMIT 5");
-    $popularNews = [];
-    if ($popRes) while ($pr = $popRes->fetch_assoc()) $popularNews[] = $pr;
 }
 $waktuBaca = $berita ? hitung_waktu_baca((string)($berita['isi'] ?? '')) : 0;
 ?>
@@ -331,8 +313,9 @@ $waktuBaca = $berita ? hitung_waktu_baca((string)($berita['isi'] ?? '')) : 0;
                     <h2 class="text-xl font-black text-slate-900">Berita Terkait</h2>
                 </div>
                 <div class="grid gap-5 sm:grid-cols-2">
-                    <?php foreach ($relatedNews as $rel): ?>
-                    <a href="<?php echo htmlspecialchars(berita_url($rel)); ?>" class="group flex gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm card-hover">
+                    <?php foreach ($relatedNews as $ri => $rel): ?>
+                    <?php $rdly = ($ri % 2) ? ' data-animate-delay="' . ($ri % 2) . '"' : ''; ?>
+                    <a href="<?php echo htmlspecialchars(berita_url($rel)); ?>" class="group flex gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm card-hover" data-animate="fade-up"<?php echo $rdly; ?>>
                         <?php $ru = berita_image_url($rel['gambar'] ?? ''); ?>
                         <div class="h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
                             <?php if ($ru !== ''): ?><img loading="lazy" src="<?php echo htmlspecialchars($ru); ?>" alt="" class="h-full w-full object-cover group-hover:scale-105 transition"><?php endif; ?>
@@ -393,59 +376,8 @@ $waktuBaca = $berita ? hitung_waktu_baca((string)($berita['isi'] ?? '')) : 0;
         <!-- Sidebar : kanan -->
         <?php if (($berita['layout_style'] ?? 'default') !== 'wide'): ?>
             <aside class="detail-side min-w-0">
-            <div>
-                <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm mb-6">
-                    <h2 class="mb-4 text-sm font-black uppercase tracking-wide text-slate-900 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Berita Terkini
-                    </h2>
-                    <?php if (empty($latestNews)): ?>
-                        <p class="text-sm text-slate-500">Belum ada berita terbaru.</p>
-                    <?php else: ?>
-                        <div class="space-y-4">
-                        <?php foreach ($latestNews as $latestItem): ?>
-                            <?php $latestImageUrl = berita_image_url($latestItem['gambar'] ?? ''); ?>
-                            <a href="<?php echo htmlspecialchars(berita_url($latestItem)); ?>" class="group flex gap-3 no-underline">
-                                <div class="h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                                    <?php if ($latestImageUrl !== ''): ?>
-                                        <img src="<?php echo htmlspecialchars($latestImageUrl); ?>" alt="<?php echo htmlspecialchars($latestItem['judul']); ?>" class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
-                                    <?php else: ?>
-                                        <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100 text-purple-400">
-                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-                                            </svg>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="mb-1 text-[11px] font-black uppercase tracking-wide text-purple-600"><?php echo htmlspecialchars($latestItem['kategori_nama'] ?? 'Berita'); ?></div>
-                                    <h3 class="line-clamp-2 text-sm font-extrabold leading-snug text-slate-900 transition group-hover:text-purple-700"><?php echo htmlspecialchars($latestItem['judul']); ?></h3>
-                                    <div class="mt-1 text-xs font-medium text-slate-500"><?php echo formatTanggalIndonesia($latestItem['tanggal_publikasi']); ?></div>
-                                </div>
-                            </a>
-                        <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                <?php if (!empty($popularNews)): ?>
-                <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm mt-6">
-                    <h2 class="mb-4 text-sm font-black uppercase tracking-wide text-slate-900">Paling Dibaca</h2>
-                    <div class="space-y-4">
-                    <?php foreach ($popularNews as $pop): ?>
-                        <a href="<?php echo htmlspecialchars(berita_url($pop)); ?>" class="group flex gap-3 no-underline">
-                            <div class="min-w-0 flex-1">
-                                <h3 class="line-clamp-2 text-sm font-extrabold text-slate-900 group-hover:text-purple-700"><?php echo htmlspecialchars($pop['judul']); ?></h3>
-                                <div class="mt-1 text-xs text-slate-500"><?php echo number_format((int)($pop['views'] ?? 0)); ?> dibaca</div>
-                            </div>
-                        </a>
-                    <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </div>
-        </aside>
+                <?php render_sidebar_widgets($conn, $settings, get_active_sections($conn, 'sidebar')); ?>
+            </aside>
         <?php endif; ?>
     </div>
 <?php endif; ?>

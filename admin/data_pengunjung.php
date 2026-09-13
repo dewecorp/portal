@@ -98,45 +98,91 @@ include __DIR__ . '/header.php';
 </div>
 
 <?php
-$blocks = [
-    'Negara Pengunjung' => $countryStats,
-    'OS yang Digunakan' => $osStats,
-    'Kategori Paling Banyak Dikunjungi' => $categoryStats,
-    'Berita yang Dibaca' => $newsStats,
-];
+$palette = ['#0d9488', '#6366f1', '#f59e0b', '#ef4444', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899', '#f97316', '#475569'];
+
+$chartData = [];
+foreach (['Negara Pengunjung' => $countryStats, 'OS yang Digunakan' => $osStats, 'Kategori Paling Banyak Dikunjungi' => $categoryStats, 'Berita yang Dibaca' => $newsStats] as $bTitle => $bRows) {
+    $labels = [];
+    $vals = [];
+    foreach ($bRows as $r) {
+        $labels[] = $r['label'] ?? 'Tidak diketahui';
+        $vals[] = (int)$r['total'];
+    }
+    $chartData[$bTitle] = ['labels' => $labels, 'data' => $vals];
+}
 ?>
 
 <div class="grid gap-5 xl:grid-cols-2">
-    <?php foreach ($blocks as $title => $rows): ?>
+    <?php $bi = 0; foreach ($chartData as $title => $chart): ?>
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="mb-4 flex items-center justify-between gap-3">
                 <h2 class="m-0 text-base font-extrabold text-slate-950"><?php echo htmlspecialchars($title); ?></h2>
                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">Top 10</span>
             </div>
-            <?php if (empty($rows)): ?>
+            <?php if (empty($chart['data'])): ?>
                 <div class="rounded-xl border border-dashed border-slate-200 p-6 text-center text-sm font-semibold text-slate-400">Belum ada data pengunjung.</div>
             <?php else: ?>
-                <div class="space-y-3">
-                    <?php foreach ($rows as $row): ?>
-                        <?php $percent = $totalVisits > 0 ? min(100, round(((int)$row['total'] / $totalVisits) * 100)) : 0; ?>
-                        <div>
-                            <div class="mb-1 flex items-center justify-between gap-3 text-sm">
-                                <span class="line-clamp-1 font-bold text-slate-700"><?php echo htmlspecialchars($row['label'] ?? 'Tidak diketahui'); ?></span>
-                                <span class="font-black text-slate-950"><?php echo number_format((int)$row['total']); ?></span>
-                            </div>
-                            <div class="h-2 overflow-hidden rounded-full bg-slate-100">
-                                <div class="h-full rounded-full bg-gradient-to-r from-teal-500 to-purple-500" style="width: <?php echo $percent; ?>%;"></div>
-                            </div>
+                <div class="mb-4" style="position:relative;height:190px;">
+                    <canvas data-pie="<?php echo $bi; ?>"></canvas>
+                </div>
+                <div class="space-y-2">
+                    <?php foreach ($chart['labels'] as $li => $label): ?>
+                        <?php $color = $palette[$li % count($palette)]; ?>
+                        <div class="flex items-center justify-between gap-3 text-sm">
+                            <span class="flex min-w-0 items-center gap-2">
+                                <span class="h-2.5 w-2.5 flex-shrink-0 rounded-full" style="background:<?php echo $color; ?>;"></span>
+                                <span class="line-clamp-1 font-bold text-slate-700"><?php echo htmlspecialchars($label); ?></span>
+                            </span>
+                            <span class="font-black text-slate-950"><?php echo number_format((int)$chart['data'][$li]); ?></span>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
-    <?php endforeach; ?>
+    <?php $bi++; endforeach; ?>
 </div>
 
 <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
     Negara diperkirakan dari bahasa browser pengunjung. Untuk akurasi negara berbasis IP, website perlu memakai layanan GeoIP atau CDN yang mengirim header negara.
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    var pieData = <?php echo json_encode(array_values($chartData), JSON_UNESCAPED_UNICODE); ?>;
+    var palette = <?php echo json_encode($palette); ?>;
+    var canvases = document.querySelectorAll('canvas[data-pie]');
+    if (!window.Chart || !canvases.length) return;
+    canvases.forEach(function (cv) {
+        var item = pieData[parseInt(cv.getAttribute('data-pie'), 10)];
+        if (!item || !item.data.length) return;
+        var colors = item.data.map(function (_, i) { return palette[i % palette.length]; });
+        new Chart(cv, {
+            type: 'doughnut',
+            data: {
+                labels: item.labels,
+                datasets: [{ data: item.data, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var total = ctx.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                                var pct = total > 0 ? Math.round(ctx.parsed * 100 / total) : 0;
+                                return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+})();
+</script>
 
 <?php include __DIR__ . '/footer.php'; ?>

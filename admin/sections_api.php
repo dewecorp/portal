@@ -30,17 +30,47 @@ function api_cfg_clean(string $tipe, $cfg): array
     if (isset($out['kategori_id'])) $out['kategori_id'] = (int)$out['kategori_id'];
     if (isset($out['autoplay'])) $out['autoplay'] = max(0, min(60, (int)$out['autoplay']));
     if (isset($out['tampil_tombol'])) $out['tampil_tombol'] = !empty($out['tampil_tombol']) ? 1 : 0;
+    if (isset($out['tampil_gambar'])) $out['tampil_gambar'] = !empty($out['tampil_gambar']) ? 1 : 0;
+    if (isset($out['tampil_jumlah'])) $out['tampil_jumlah'] = !empty($out['tampil_jumlah']) ? 1 : 0;
     if (isset($out['style_grid'])) $out['style_grid'] = section_normalize_style((string)$out['style_grid']);
     if (isset($out['galeri']) && !is_array($out['galeri'])) {
         $d = json_decode((string)$out['galeri'], true);
         $out['galeri'] = is_array($d) ? array_values($d) : [];
     }
+    if (isset($out['tautan'])) {
+        if (is_array($out['tautan'])) {
+            $norm = [];
+            foreach ($out['tautan'] as $it) {
+                if (is_array($it)) {
+                    $lb = trim((string)($it['label'] ?? ''));
+                    $ur = trim((string)($it['url'] ?? ''));
+                } else {
+                    $lb = trim((string)$it);
+                    $ur = $lb;
+                }
+                if ($lb === '' || $ur === '') continue;
+                $norm[] = ['label' => $lb, 'url' => $ur];
+            }
+            $out['tautan'] = $norm;
+        } else {
+            $d = json_decode((string)$out['tautan'], true);
+            $out['tautan'] = is_array($d) ? $d : trim((string)$out['tautan']);
+        }
+    }
     return $out;
+}
+
+function api_area(string $raw): string
+{
+    $a = trim((string)$raw);
+    return in_array($a, ['home', 'sidebar', 'footer'], true) ? $a : 'home';
 }
 
 function api_tipe_valid(string $area, string $tipe): bool
 {
-    $list = $area === 'footer' ? section_tipe_footer() : section_tipe_home();
+    if ($area === 'footer') $list = section_tipe_footer();
+    elseif ($area === 'sidebar') $list = section_tipe_sidebar();
+    else $list = section_tipe_home();
     return isset($list[$tipe]);
 }
 
@@ -52,7 +82,7 @@ $req = array_merge($_POST, $json);
 
 try {
     if ($aksi === 'list') {
-        $area = ($req['area'] ?? 'home') === 'footer' ? 'footer' : 'home';
+        $area = api_area($req['area'] ?? 'home');
         $stmt = $conn->prepare("SELECT * FROM sections WHERE area = ? ORDER BY urutan ASC, id ASC");
         $stmt->bind_param('s', $area);
         $stmt->execute();
@@ -67,7 +97,7 @@ try {
     }
 
     if ($aksi === 'create') {
-        $area = ($req['area'] ?? 'home') === 'footer' ? 'footer' : 'home';
+        $area = api_area($req['area'] ?? 'home');
         $tipe = trim((string)($req['tipe'] ?? ''));
         if (!api_tipe_valid($area, $tipe)) api_out(false, ['error' => 'Tipe tidak valid.']);
         $mx = $conn->prepare("SELECT COALESCE(MAX(urutan),0)+1 AS nxt FROM sections WHERE area = ?");
@@ -97,7 +127,7 @@ try {
         $cur = $row->get_result()->fetch_assoc();
         $row->close();
         if (!$cur) api_out(false, ['error' => 'Section tidak ditemukan.']);
-        $area = ($req['area'] ?? $cur['area']) === 'footer' ? 'footer' : 'home';
+        $area = api_area($req['area'] ?? $cur['area']);
         $tipe = trim((string)($req['tipe'] ?? $cur['tipe']));
         if (!api_tipe_valid($area, $tipe)) api_out(false, ['error' => 'Tipe tidak valid.']);
         $judul = trim((string)($req['judul'] ?? $cur['judul'] ?? ''));
@@ -123,7 +153,7 @@ try {
     }
 
     if ($aksi === 'reorder') {
-        $area = ($req['area'] ?? 'home') === 'footer' ? 'footer' : 'home';
+        $area = api_area($req['area'] ?? 'home');
         $ids = $req['ids'] ?? [];
         if (!is_array($ids) || empty($ids)) api_out(false, ['error' => 'Data urutan kosong.']);
         $u = 1;

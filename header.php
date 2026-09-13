@@ -118,6 +118,7 @@ foreach ($navMenus as &$menu) {
 <!doctype html>
 <html lang="id">
 <head>
+    <script>try{document.documentElement.classList.add('js-anim');}catch(e){}</script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($pageTitle ?? ($settings['site_name'] ?? 'Portal Berita')); ?></title>
@@ -175,6 +176,43 @@ foreach ($navMenus as &$menu) {
             }
         }
     </script>
+    <style id="pb-theme-css">
+        <?php echo site_theme_css($settings); ?>
+        /* Theme overrides: remap bootstrap Tailwind purple/blue accents ke variabel tema */
+        .from-purple-600, .from-purple-500, .from-purple-400 { --tw-gradient-from: var(--pb-p1) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+        .to-blue-600, .to-blue-500, .to-blue-400 { --tw-gradient-to: var(--pb-p2) !important; }
+        .from-purple-700 { --tw-gradient-from: var(--pb-nav1) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+        .via-purple-600 { --tw-gradient-stops: var(--tw-gradient-from), var(--pb-nav2), var(--pb-nav3) !important; }
+        .to-purple-900 { --tw-gradient-to: var(--pb-foot) !important; }
+        .from-purple-100 { --tw-gradient-from: var(--pb-soft1) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+        .to-blue-100 { --tw-gradient-to: var(--pb-soft2) !important; }
+        .from-purple-50 { --tw-gradient-from: var(--pb-tint1) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+        .to-purple-50 { --tw-gradient-to: var(--pb-tint1) !important; }
+        .from-blue-50 { --tw-gradient-from: var(--pb-tint2) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+        .to-blue-50 { --tw-gradient-to: var(--pb-tint2) !important; }
+        .text-purple-600 { color: var(--pb-accent) !important; }
+        .text-purple-700, .text-purple-900 { color: var(--pb-accent-deep) !important; }
+        .text-purple-400, .text-blue-400 { color: var(--pb-accent-soft) !important; }
+        .hover\:text-purple-600:hover { color: var(--pb-accent) !important; }
+        .hover\:text-purple-700:hover { color: var(--pb-accent-deep) !important; }
+        .hover\:text-purple-400:hover { color: var(--pb-accent-soft) !important; }
+        .group:hover .group-hover\:text-purple-700 { color: var(--pb-accent-deep) !important; }
+        .group:hover .group-hover\:text-purple-600 { color: var(--pb-accent) !important; }
+        .group:hover .group-hover\:bg-purple-100 { background-color: var(--pb-hover2) !important; }
+        .bg-purple-600 { background-color: var(--pb-accent) !important; }
+        .hover\:bg-purple-600:hover { background-color: var(--pb-accent) !important; }
+        .bg-purple-50, .hover\:bg-purple-50:hover { background-color: var(--pb-hover) !important; }
+        .hover\:bg-purple-100:hover { background-color: var(--pb-hover2) !important; }
+        .border-purple-100 { border-color: var(--pb-border-soft) !important; }
+        .border-purple-200 { border-color: var(--pb-border) !important; }
+        .border-purple-300, .hover\:border-purple-300:hover, .border-purple-400 { border-color: var(--pb-border-strong) !important; }
+        .border-purple-500 { border-color: var(--pb-nav-brd) !important; }
+        .border-purple-600 { border-color: var(--pb-accent) !important; }
+        .border-blue-200 { border-color: var(--pb-border-blue) !important; }
+        .focus\:border-purple-400:focus { border-color: var(--pb-accent) !important; }
+        .ring-purple-100, .focus\:ring-purple-100:focus { --tw-ring-color: var(--pb-focus) !important; }
+        .shadow-purple-100, .shadow-purple-200, .shadow-blue-200 { --tw-shadow-color: var(--pb-shadow) !important; }
+    </style>
     <style>
         html,
         body {
@@ -189,7 +227,7 @@ foreach ($navMenus as &$menu) {
             font-family: 'Outfit', sans-serif;
         }
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pb-p1) 0%, var(--pb-p2) 100%);
         }
         .glass-effect {
             background: rgba(255, 255, 255, 0.8);
@@ -213,13 +251,13 @@ foreach ($navMenus as &$menu) {
             transform: scale(1.08);
         }
         .text-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pb-p1) 0%, var(--pb-p2) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .badge-category {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pb-p1) 0%, var(--pb-p2) 100%);
             color: white;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
@@ -271,8 +309,8 @@ foreach ($navMenus as &$menu) {
             text-decoration: none;
         }
         .dropdown-panel a:hover {
-            background-color: #f8fafc;
-            color: #667eea;
+            background-color: var(--pb-hover);
+            color: var(--pb-accent-deep);
         }
         .mega-panel {
             position: absolute;
@@ -323,7 +361,7 @@ foreach ($navMenus as &$menu) {
             font-weight: 900;
             text-transform: uppercase;
             margin-bottom: 0.5rem;
-            color: #667eea;
+            color: var(--pb-accent);
         }
         .mega-news-grid {
             display: grid;
@@ -346,16 +384,16 @@ foreach ($navMenus as &$menu) {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at 20% 0%, rgba(139, 92, 246, 0.16), transparent 34%), radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.14), transparent 30%);
+            background: radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--pb-accent) 16%, transparent), transparent 34%), radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.14), transparent 30%);
             opacity: 0;
             transition: opacity .22s ease;
             pointer-events: none;
         }
         .mega-news-card:hover {
             transform: translateY(-4px);
-            border-color: rgba(139, 92, 246, 0.35);
+            border-color: color-mix(in srgb, var(--pb-accent) 35%, transparent);
             background: rgba(255,255,255,0.78);
-            box-shadow: 0 22px 46px rgba(88, 28, 135, 0.14);
+            box-shadow: 0 22px 46px color-mix(in srgb, var(--pb-accent) 14%, transparent);
         }
         .mega-news-card:hover::before {
             opacity: 1;
@@ -392,7 +430,7 @@ foreach ($navMenus as &$menu) {
             text-decoration: none;
         }
         .mega-link:hover {
-            color: #667eea;
+            color: var(--pb-accent);
         }
         .line-clamp-2 {
             display: -webkit-box;
@@ -436,10 +474,10 @@ foreach ($navMenus as &$menu) {
             margin-bottom: 0.35rem;
         }
         .news-content blockquote {
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--pb-accent);
             padding: 0.75rem 1rem;
             margin: 1rem 0;
-            background: #f8fafc;
+            background: linear-gradient(to right, var(--pb-hover), #f8fafc);
             border-radius: 0.5rem;
             color: #475569;
             font-style: italic;
@@ -451,11 +489,11 @@ foreach ($navMenus as &$menu) {
             margin: 1rem 0;
         }
         .news-content a {
-            color: #667eea;
+            color: var(--pb-accent);
             text-decoration: underline;
         }
         .news-content a:hover {
-            color: #764ba2;
+            color: var(--pb-accent-deep);
         }
         .news-content table {
             width: 100%;
@@ -492,7 +530,7 @@ foreach ($navMenus as &$menu) {
             width: 3rem;
             height: 3rem;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--pb-p1) 0%, var(--pb-p2) 100%);
             color: white;
             display: flex;
             align-items: center;
@@ -502,7 +540,7 @@ foreach ($navMenus as &$menu) {
             visibility: hidden;
             transform: translateY(10px);
             transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 20px var(--pb-shadow);
             z-index: 999;
             border: none;
         }
@@ -513,7 +551,7 @@ foreach ($navMenus as &$menu) {
         }
         .back-to-top:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 12px 28px var(--pb-shadow);
         }
         .back-to-top:active {
             transform: translateY(-2px);
@@ -532,29 +570,22 @@ foreach ($navMenus as &$menu) {
                 overflow-x: visible !important;
             }
         }
-        /* Elementor-style section animations — fade-up default, smooth */
-        [data-animate] {
-            opacity: 0;
-            transition: opacity .9s ease-out, transform .9s cubic-bezier(.22,.61,.36,1);
-        }
-        [data-animate]:not(.animate-in) {
-            opacity: 0;
-        }
-        [data-animate="fade-up"] { transform: translate3d(0,70px,0); }
-        [data-animate="fade-down"] { transform: translate3d(0,-70px,0); }
-        [data-animate="fade-left"] { transform: translate3d(90px,0,0); }
-        [data-animate="fade-right"] { transform: translate3d(-90px,0,0); }
-        [data-animate="fade"] { transform: none; }
-        [data-animate="zoom-in"] { transform: scale(.9); }
-        [data-animate="zoom-out"] { transform: scale(1.12); }
-        [data-animate="flip"] { transform: perspective(1000px) rotateX(10deg) translateY(48px); }
-        [data-animate="bounce"] { transform: translate3d(0,70px,0) scale(.96); }
-        [data-animate="slide"] { transform: translate3d(90px,0,0); }
-        [data-animate].animate-in {
-            opacity: 1 !important;
-            transform: none !important;
-        }
-        [data-animate="bounce"].animate-in { transition: opacity .8s ease-out, transform 1s cubic-bezier(.34,1.3,.64,1); }
+        /* Section animations: transisi + replay tiap masuk viewport (tanpa gate JS-class) */
+        [data-animate] { transition: opacity .8s ease, transform .8s cubic-bezier(.22,.61,.36,1); }
+        [data-animate]:not(.animate-in) { opacity: 0 !important; }
+        [data-animate="fade-up"]:not(.animate-in) { transform: translate3d(0,70px,0); }
+        [data-animate="fade-down"]:not(.animate-in) { transform: translate3d(0,-70px,0); }
+        [data-animate="fade-left"]:not(.animate-in) { transform: translate3d(90px,0,0); }
+        [data-animate="fade-right"]:not(.animate-in) { transform: translate3d(-90px,0,0); }
+        [data-animate="fade"]:not(.animate-in) { transform: none; }
+        [data-animate="zoom-in"]:not(.animate-in) { transform: scale(.9); }
+        [data-animate="zoom-out"]:not(.animate-in) { transform: scale(1.12); }
+        [data-animate="flip"]:not(.animate-in) { transform: perspective(1000px) rotateX(10deg) translateY(48px); }
+        [data-animate="bounce"]:not(.animate-in) { transform: translate3d(0,70px,0) scale(.96); }
+        [data-animate="slide"]:not(.animate-in) { transform: translate3d(90px,0,0); }
+        [data-animate].animate-in { opacity: 1 !important; transform: none !important; }
+        [data-animate="bounce"].animate-in { transition-timing-function: cubic-bezier(.34,1.3,.64,1); transition-duration: .95s; }
+        [data-animate="flip"].animate-in { transition-duration: .9s; }
         [data-animate-delay="1"].animate-in { transition-delay: .1s; }
         [data-animate-delay="2"].animate-in { transition-delay: .2s; }
         [data-animate-delay="3"].animate-in { transition-delay: .3s; }
@@ -570,7 +601,19 @@ foreach ($navMenus as &$menu) {
         /* Hero carousel: hanya matikan animasi pada gambar slide, section pembungkus tetap ikut */
         #heroCarousel .carousel-slide [data-animate], [id^="heroCarousel"] .carousel-slide [data-animate] { opacity: 1 !important; transform: none !important; }
         @media (prefers-reduced-motion: reduce) {
-            [data-animate] { transform: none !important; }
+            /* Hormati OS tapi tetap tampilkan gerak singkat, bukan matikan total */
+            [data-animate] { transition-duration: .3s !important; }
+        }
+        /* Footer bawah + pemisah dari body */
+        .pb-footer-divider {
+            height: 5px;
+            background: linear-gradient(90deg, var(--pb-p1), var(--pb-p2), var(--pb-foot));
+        }
+        .pb-site-footer {
+            margin-top: auto;
+            background: linear-gradient(to bottom right, #0f172a, #1e293b, var(--pb-foot));
+            padding-top: 3rem;
+            padding-bottom: 3rem;
         }
         /* SectionBuilder: gaya gambar ala Elementor */
         .media-gaya-kenburns img { animation: sbKenBurns 14s ease-in-out infinite alternate; }
@@ -589,17 +632,18 @@ foreach ($navMenus as &$menu) {
         @keyframes sbMelayang { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
         @media (prefers-reduced-motion: reduce) {
             .media-gaya-kenburns img, .media-gaya-kenburns-balik img, .media-gaya-zoom-lambat img,
-            .media-gaya-geser-kiri img, .media-gaya-geser-kanan img, .media-gaya-fade-zoom img, .media-gaya-melayang { animation: none !important; }
+            .media-gaya-geser-kiri img, .media-gaya-geser-kanan img, .media-gaya-fade-zoom img, .media-gaya-melayang { animation-duration: 4s !important; }
         }
         /* SectionBuilder: carousel berita horizontal */
         .sb-hscroll { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
         .sb-hscroll > * { scroll-snap-align: start; }
     </style>
+    <noscript><style>[data-animate]{opacity:1 !important;transform:none !important;}</style></noscript>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50 text-slate-900 antialiased flex flex-col">
 <!-- Top Bar -->
 <div class="border-b border-purple-500/20 bg-gradient-to-r from-purple-700 via-purple-600 to-blue-600">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 text-xs sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-[1400px] items-center justify-between px-2 py-2.5 text-xs sm:px-3 lg:px-4">
         <div class="flex items-center gap-4">
             <span class="font-semibold text-white/95"><?php echo htmlspecialchars($settings['site_tagline'] ?? ''); ?></span>
             <span class="text-white/30">|</span>
@@ -607,12 +651,15 @@ foreach ($navMenus as &$menu) {
             <span class="text-white/30">|</span>
             <span class="font-semibold text-white/95" id="liveClock"><?php echo date('H:i'); ?> WIB</span>
         </div>
+        <div class="hidden items-center gap-2 sm:flex">
+            <?php echo sosmed_icons_html(sosmed_links([], $settings), 'w-7 h-7'); ?>
+        </div>
     </div>
 </div>
 
 <!-- Main Header -->
 <header class="sticky top-0 z-[60] border-b border-slate-200/50 bg-white/90 backdrop-blur-md shadow-sm">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-[1400px] items-center justify-between px-2 py-4 sm:px-3 lg:px-4">
         <a href="index" class="flex items-center gap-3 no-underline group">
             <?php if (!empty($settings['logo_path'])): ?>
                 <img src="<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="<?php echo htmlspecialchars($settings['site_name'] ?? 'Portal'); ?>" class="h-12 w-auto transition group-hover:scale-105">
@@ -637,7 +684,7 @@ foreach ($navMenus as &$menu) {
 
 <!-- Navigation -->
 <nav class="border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-[73px] z-50">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto max-w-[1400px] px-2 sm:px-3 lg:px-4">
         <div class="main-nav-inner flex gap-1 overflow-x-visible py-2">
             <a href="index" class="shrink-0 rounded-full px-5 py-2 text-sm font-bold uppercase tracking-wide text-white bg-gradient-to-r from-purple-600 to-blue-600 transition hover:shadow-lg hover:shadow-purple-200">
                 Beranda
@@ -850,4 +897,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <main class="min-h-[60vh] min-w-0 flex-1 overflow-x-clip py-8">
-    <div class="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto min-w-0 max-w-[1400px] px-2 sm:px-3 lg:px-4">

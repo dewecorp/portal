@@ -42,6 +42,8 @@ $extraSettingsCols = [
     'komentar_max_links TINYINT NOT NULL DEFAULT 2',
     'komentar_interval_detik INT NOT NULL DEFAULT 30',
     'komentar_kata_kasar TEXT NULL',
+    "theme_id VARCHAR(50) NOT NULL DEFAULT 'indigo'",
+    "theme_color_id VARCHAR(50) NOT NULL DEFAULT 'purple'",
 ];
 $needRefresh = false;
 foreach ($extraSettingsCols as $col) {
@@ -59,7 +61,7 @@ if ($needRefresh) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $site_name = trim($_POST['site_name'] ?? '');
     $site_tagline = trim($_POST['site_tagline'] ?? '');
-    $latest_news_count = max(1, min(20, (int)($_POST['latest_news_count'] ?? 5)));
+    $latest_news_count = max(1, min(20, (int)($_POST['latest_news_count'] ?? ($current['latest_news_count'] ?? 5))));
     $footer_email = trim($_POST['footer_email'] ?? '');
     $footer_address = trim($_POST['footer_address'] ?? '');
     $footer_phone = trim($_POST['footer_phone'] ?? '');
@@ -72,6 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $komentar_max_links = max(0, min(10, (int)($_POST['komentar_max_links'] ?? 2)));
     $komentar_interval_detik = max(5, min(600, (int)($_POST['komentar_interval_detik'] ?? 30)));
     $komentar_kata_kasar = trim((string)($_POST['komentar_kata_kasar'] ?? ''));
+    $theme_id = (string)($_POST['theme_id'] ?? ($current['theme_id'] ?? 'indigo'));
+    $theme_color_id = (string)($_POST['theme_color_id'] ?? ($current['theme_color_id'] ?? 'purple'));
+    if (!array_key_exists($theme_id, site_theme_styles())) $theme_id = 'indigo';
+    if (!array_key_exists($theme_color_id, site_theme_accents())) $theme_color_id = 'purple';
     $logo_path = $current['logo_path'] ?? null;
     $favicon_path = $current['favicon_path'] ?? null;
 
@@ -133,9 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === '') {
-            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ?, theme_id = ?, theme_color_id = ? WHERE id = ?");
             $id = (int)$current['id'];
-            $stmt->bind_param('ssssissssssiiiiisi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $id);
+            $stmt->bind_param('ssssissssssiiiiiissi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $theme_id, $theme_color_id, $id);
             if ($stmt->execute()) {
                 $success = 'Pengaturan portal berhasil disimpan.';
                 $current['site_name'] = $site_name;
@@ -155,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current['komentar_max_links'] = $komentar_max_links;
                 $current['komentar_interval_detik'] = $komentar_interval_detik;
                 $current['komentar_kata_kasar'] = $komentar_kata_kasar;
+                $current['theme_id'] = $theme_id;
+                $current['theme_color_id'] = $theme_color_id;
             } else {
                 $error = 'Terjadi kesalahan saat menyimpan pengaturan.';
             }
@@ -201,11 +209,42 @@ include __DIR__ . '/header.php';
 <?php endif; ?>
 
 <div class="row">
-    <div class="col-md-7">
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body">
-                <h2 class="h6 mb-3">Identitas Portal</h2>
-                <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="col-12">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
+                    <h2 class="h6 mb-3">Tema & Gaya</h2>
+                    <div class="mb-2 fw-semibold small text-muted">Gaya Tema</div>
+                    <div class="row g-2 mb-3" id="pbThemeGrid">
+                        <?php foreach (site_theme_styles() as $tKey => $tStyle): ?>
+                            <div class="col-6 col-lg-4">
+                                <label class="pb-theme-item <?php echo ($current['theme_id'] ?? 'indigo') === $tKey ? 'pb-selected' : ''; ?>" data-pb-id="<?php echo $tKey; ?>">
+                                    <input type="radio" name="theme_id" value="<?php echo $tKey; ?>" class="pb-radio" <?php echo ($current['theme_id'] ?? 'indigo') === $tKey ? 'checked' : ''; ?>>
+                                    <span class="pb-theme-bar" style="background: linear-gradient(90deg, <?php echo $tStyle['nav1']; ?>, <?php echo $tStyle['nav2']; ?>, <?php echo $tStyle['nav3']; ?>);"></span>
+                                    <span class="pb-theme-btn" style="background: linear-gradient(90deg, <?php echo $tStyle['p1']; ?>, <?php echo $tStyle['p2']; ?>);"></span>
+                                    <span class="pb-theme-name"><?php echo htmlspecialchars($tStyle['label']); ?></span>
+                                    <span class="pb-check">&#10003;</span>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="mb-1 fw-semibold small text-muted">Warna Aksen</div>
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="pbAccentGrid">
+                        <?php foreach (site_theme_accents() as $aKey => $aAccent): ?>
+                            <label class="pb-accent-item <?php echo ($current['theme_color_id'] ?? 'purple') === $aKey ? 'pb-selected' : ''; ?>" title="<?php echo htmlspecialchars($aAccent['label']); ?> <?php echo htmlspecialchars($aAccent['main']); ?>">
+                                <input type="radio" name="theme_color_id" value="<?php echo $aKey; ?>" class="pb-radio" <?php echo ($current['theme_color_id'] ?? 'purple') === $aKey ? 'checked' : ''; ?>>
+                                <span class="pb-accent-dot" style="background: <?php echo $aAccent['main']; ?>;"></span>
+                                <span class="pb-check">&#10003;</span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="form-text mb-3">Pilih gaya visual dan warna aksen untuk seluruh halaman pengunjung. Pratinjau tampil di panel kanan.</div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
+                    <h3 class="h6 mb-3">Identitas Portal</h3>
                     <div class="mb-3">
                         <label class="form-label">Nama Portal</label>
                         <input type="text" name="site_name" class="form-control" required value="<?php echo htmlspecialchars($current['site_name'] ?? ''); ?>">
@@ -218,20 +257,31 @@ include __DIR__ . '/header.php';
                         <label class="form-label">Logo Portal</label>
                         <input type="file" name="logo" class="form-control" accept="image/*">
                         <div class="form-text">Disarankan gambar horizontal (format: JPG, PNG, WEBP, atau SVG).</div>
+                        <?php if (!empty($current['logo_path'])): ?>
+                            <div class="mt-2">
+                                <div class="border rounded p-3 bg-light d-inline-block">
+                                    <img src="../<?php echo htmlspecialchars($current['logo_path']); ?>" alt="<?php echo htmlspecialchars($current['site_name'] ?? 'Portal'); ?>" style="max-height:60px;">
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Favicon</label>
                         <input type="file" name="favicon" class="form-control" accept="image/x-icon,image/png,image/svg+xml">
                         <div class="form-text">Ikon kecil yang tampil di tab browser (format: ICO, PNG, JPG, atau SVG, disarankan 32×32px).</div>
+                        <?php if (!empty($current['favicon_path'])): ?>
+                            <div class="mt-2">
+                                <div class="border rounded p-3 bg-light d-inline-flex align-items-center gap-3">
+                                    <img src="../<?php echo htmlspecialchars($current['favicon_path']); ?>" alt="Favicon" style="width:32px;height:32px;object-fit:contain;">
+                                    <span class="small text-muted">32×32px</span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <hr class="my-4">
-                    <h3 class="h6 mb-3">Berita Terkini</h3>
-                    <div class="mb-3">
-                        <label class="form-label">Jumlah Berita di Detail</label>
-                        <input type="number" name="latest_news_count" class="form-control" min="1" max="20" value="<?php echo (int)($current['latest_news_count'] ?? 5); ?>">
-                        <div class="form-text">Jumlah berita terbaru yang tampil di kolom samping halaman detail berita.</div>
-                    </div>
-                    <hr class="my-4">
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
                     <h3 class="h6 mb-3">Informasi Footer</h3>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
@@ -245,8 +295,30 @@ include __DIR__ . '/header.php';
                         <label class="form-label">Telepon</label>
                         <input type="text" name="footer_phone" class="form-control" value="<?php echo htmlspecialchars($current['footer_phone'] ?? ''); ?>">
                     </div>
-                    <hr class="my-4">
-                    <h3 class="h6 mb-3">Media Sosial</h3>
+                </div>
+            </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h2 class="h6 mb-3">Pratinjau Tema</h2>
+                <div class="rounded-3 mb-2 d-flex align-items-center px-3" id="pbPrevNav" style="height:44px;background:linear-gradient(90deg,#7e22ce,#9333ea,#2563eb);">
+                    <span class="fw-bold text-white" style="letter-spacing:.5px;">Portal Berita</span>
+                </div>
+                <div class="rounded mb-2 d-flex gap-2 align-items-center p-2" style="border:1px solid #e5e7eb;">
+                    <span class="pb-theme-btn d-inline-block" id="pbPrevBtn" style="background:linear-gradient(90deg,#9333ea,#2563eb);"></span>
+                    <span class="badge rounded-pill" id="pbPrevPill" style="background:linear-gradient(90deg,#9333ea,#2563eb);">Kategori</span>
+                    <span class="text-decoration-underline small" id="pbPrevLink" style="color:#9333ea;">tautan artikel</span>
+                </div>
+                <div class="rounded p-2 small text-muted mb-2" style="border:1px solid #e5e7eb;border-left:4px solid #9333ea;" id="pbPrevQuote">
+                    Kutipan & blok isi artikel mengikuti warna aksen tema.
+                </div>
+                <div class="rounded px-3 py-2 text-white small" id="pbPrevFoot" style="background:linear-gradient(90deg,#581c87,#0f172a);">Area footer gelap</div>
+            </div>
+        </div>
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body">
+                        <h3 class="h6 mb-3">Media Sosial</h3>
                     <div class="mb-3">
                         <label class="form-label">Facebook URL</label>
                         <input type="url" name="footer_social_facebook" class="form-control" value="<?php echo htmlspecialchars($current['footer_social_facebook'] ?? ''); ?>" placeholder="https://facebook.com/username">
@@ -259,7 +331,10 @@ include __DIR__ . '/header.php';
                         <label class="form-label">Instagram URL</label>
                         <input type="url" name="footer_social_instagram" class="form-control" value="<?php echo htmlspecialchars($current['footer_social_instagram'] ?? ''); ?>" placeholder="https://instagram.com/username">
                     </div>
-                    <hr class="my-4">
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
                     <h3 class="h6 mb-3">Komentar & Anti-Spam</h3>
                     <div class="form-check form-switch mb-2">
                         <input class="form-check-input" type="checkbox" name="komentar_aktif" id="komentar_aktif" <?php echo ((int)($current['komentar_aktif'] ?? 1) === 1) ? 'checked' : ''; ?>>
@@ -286,47 +361,94 @@ include __DIR__ . '/header.php';
                         <label class="form-label">Kata terlarang (pisah koma/baris)</label>
                         <textarea name="komentar_kata_kasar" class="form-control" rows="3" placeholder="judi, slot, togel"><?php echo htmlspecialchars($current['komentar_kata_kasar'] ?? ''); ?></textarea>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary">
-                            Simpan Pengaturan
-                        </button>
-                    </div>
-                </form>
-            </div>
+</div>
         </div>
-    </div>
-    <div class="col-md-5">
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body">
-                <h2 class="h6 mb-3">Pratinjau Logo</h2>
-                <?php if (!empty($current['logo_path'])): ?>
-                    <div class="mb-2">
-                        <div class="border rounded p-3 bg-light d-inline-block">
-                            <img src="../<?php echo htmlspecialchars($current['logo_path']); ?>" alt="<?php echo htmlspecialchars($current['site_name'] ?? 'Portal'); ?>" style="max-height:60px;">
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <p class="text-muted small mb-0">Belum ada logo yang diunggah.</p>
-                <?php endif; ?>
-            </div>
         </div>
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body">
-                <h2 class="h6 mb-3">Pratinjau Favicon</h2>
-                <?php if (!empty($current['favicon_path'])): ?>
-                    <div class="mb-2">
-                        <div class="border rounded p-3 bg-light d-inline-flex align-items-center gap-3">
-                            <img src="../<?php echo htmlspecialchars($current['favicon_path']); ?>" alt="Favicon" style="width:32px;height:32px;object-fit:contain;">
-                            <span class="small text-muted">32×32px</span>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <p class="text-muted small mb-0">Belum ada favicon yang diunggah.</p>
-                <?php endif; ?>
-            </div>
         </div>
-    </div>
+        <div class="mt-4 d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+        </div>
+    </form>
 </div>
 
 <?php
 include __DIR__ . '/footer.php';
+
+$__pbStyles = site_theme_styles();
+$__pbAccents = site_theme_accents();
+?>
+<style>
+    .pb-theme-item, .pb-accent-item {
+        position: relative;
+        display: block;
+        cursor: pointer;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .pb-theme-item:hover, .pb-accent-item:hover { border-color: #c7d2fe; }
+    .pb-theme-item.pb-selected, .pb-accent-item.pb-selected {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .pb-radio { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .pb-theme-bar {
+        display: block;
+        height: 20px;
+        border-radius: 0.4rem 0.4rem 0 0;
+    }
+    .pb-theme-btn {
+        display: block;
+        height: 10px;
+        width: 46px;
+        border-radius: 9999px;
+        margin-top: 4px;
+    }
+    .pb-accent-item { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; }
+    .pb-accent-dot { width: 22px; height: 22px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+    .pb-theme-name { display: block; font-size: .7rem; font-weight: 700; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pb-check {
+        position: absolute; top: -6px; right: -6px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #10b981; color: #fff; font-size: .7rem;
+        display: none; align-items: center; justify-content: center;
+        font-weight: 900;
+    }
+    .pb-selected .pb-check { display: flex; }
+</style>
+<script>
+    const PB_STYLES = <?php echo json_encode($__pbStyles); ?>;
+    const PB_ACCENTS = <?php echo json_encode($__pbAccents); ?>;
+    function pbPreview() {
+        var sid = document.querySelector('input[name="theme_id"]:checked');
+        var cid = document.querySelector('input[name="theme_color_id"]:checked');
+        var st = sid ? PB_STYLES[sid.value] : null;
+        var ac = cid ? PB_ACCENTS[cid.value] : null;
+        if (!st || !ac) return;
+        var bar = (document.getElementById('pbPrevNav'));
+        if (bar) bar.style.background = 'linear-gradient(90deg,' + st.nav1 + ',' + st.nav2 + ',' + st.nav3 + ')';
+        var btn = document.getElementById('pbPrevBtn');
+        if (btn) btn.style.background = 'linear-gradient(90deg,' + st.p1 + ',' + st.p2 + ')';
+        var pill = document.getElementById('pbPrevPill');
+        if (pill) pill.style.background = 'linear-gradient(90deg,' + st.p1 + ',' + st.p2 + ')';
+        var link = document.getElementById('pbPrevLink');
+        if (link) link.style.color = ac.main;
+        var quote = document.getElementById('pbPrevQuote');
+        if (quote) quote.style.borderLeftColor = ac.main;
+        var foot = document.getElementById('pbPrevFoot');
+        if (foot) foot.style.background = 'linear-gradient(90deg,' + st.foot + ',#0f172a)';
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target && (e.target.name === 'theme_id' || e.target.name === 'theme_color_id')) {
+            document.querySelectorAll('.pb-theme-item').forEach(function (el) {
+                el.classList.toggle('pb-selected', el.querySelector('input[name="theme_id"]').checked);
+            });
+            document.querySelectorAll('.pb-accent-item').forEach(function (el) {
+                el.classList.toggle('pb-selected', el.querySelector('input[name="theme_color_id"]').checked);
+            });
+            pbPreview();
+        }
+    });
+    pbPreview();
+</script>

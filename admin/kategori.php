@@ -53,7 +53,31 @@ if ($action === 'delete' && $id > 0) {
         echo json_encode(['success' => false, 'error' => $canDelete ? 'Gagal menghapus kategori' : 'Kategori masih memiliki berita']);
         exit;
     }
-    header('Location: kategori' . (!$canDelete ? '?err=has_berita' : ''));
+header('Location: kategori' . (!$canDelete ? '?err=has_berita' : ''));
+    exit;
+}
+
+// Bulk delete
+if ($action === 'bulk_delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $raw = (string)($_POST['ids'] ?? '');
+    $ids = array_values(array_filter(array_map('intval', explode(',', $raw))));
+    $deleted = 0;
+    $skipped = 0;
+    foreach ($ids as $bid) {
+        if ($bid <= 0) continue;
+        $cnt = 0;
+        $q = $conn->query("SELECT COUNT(*) AS jml FROM berita WHERE kategori_id = $bid");
+        if ($q) $cnt = (int)$q->fetch_assoc()['jml'];
+        if ($cnt > 0) { $skipped++; continue; }
+        $stmt = $conn->prepare("DELETE FROM kategori WHERE id = ?");
+        $stmt->bind_param('i', $bid);
+        if ($stmt->execute() && $stmt->affected_rows > 0) $deleted++;
+        $stmt->close();
+    }
+    header('Content-Type: application/json; charset=utf-8');
+    $msg = "Berhasil menghapus $deleted kategori.";
+    if ($skipped > 0) $msg .= " $skipped kategori dilewati karena masih memiliki berita.";
+    echo json_encode(['success' => true, 'deleted' => $deleted, 'skipped' => $skipped, 'message' => $msg]);
     exit;
 }
 
@@ -187,11 +211,19 @@ include __DIR__ . '/header.php';
 
 <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body">
-        <h2 class="h6 mb-3">Daftar Kategori</h2>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h6 mb-0">Daftar Kategori</h2>
+            <div class="d-flex align-items-center gap-3">
+                <button type="button" class="btn btn-danger btn-sm" id="bulkDeleteBtn" disabled>
+                    <?php echo ui_icon('trash', 'w-4 h-4'); ?> Hapus Terpilih (<span id="bulkCount">0</span>)
+                </button>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table align-middle table-sm">
                 <thead>
                 <tr>
+                    <th width="40"><input type="checkbox" class="form-check-input" id="bulkAll" title="Pilih semua"></th>
                     <th width="60">#</th>
                     <th>Nama Kategori</th>
                     <th width="120">Jml Berita</th>
@@ -201,29 +233,27 @@ include __DIR__ . '/header.php';
                 <tbody>
                 <?php if (empty($kategoris)): ?>
                     <tr>
-                        <td colspan="4" class="text-center text-muted py-3">Belum ada kategori.</td>
+                        <td colspan="5" class="text-center text-muted py-3">Belum ada kategori.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($kategoris as $index => $kat): ?>
                         <tr>
+                            <td><input type="checkbox" class="form-check-input bulk-cb" value="<?php echo (int)$kat['id']; ?>"></td>
                             <td><?php echo $index + 1; ?></td>
                             <td><?php echo htmlspecialchars($kat['nama']); ?></td>
                             <td>
                                 <span class="badge bg-info-subtle text-info"><?php echo (int)$kat['jml_berita']; ?> berita</span>
                             </td>
                             <td class="text-end">
-                                <a href="kategori?action=edit&id=<?php echo (int)$kat['id']; ?>" class="btn btn-sm btn-outline-primary"
+                                <a href="kategori?action=edit&id=<?php echo (int)$kat['id']; ?>" class="btn-icon btn-edit" title="Ubah" aria-label="Ubah"
                                    data-modal-open="modalEditKategori"
                                    data-id="<?php echo (int)$kat['id']; ?>"
                                    data-nama="<?php echo htmlspecialchars($kat['nama']); ?>"
-                                   data-slug="<?php echo htmlspecialchars($kat['slug']); ?>"
-                                   data-grid-count="<?php echo (int)($kat['grid_count'] ?? 12); ?>"
-                                   data-grid-style="<?php echo htmlspecialchars($kat['grid_style'] ?? 'grid'); ?>"
-                                   data-animasi="<?php echo htmlspecialchars($kat['animasi'] ?? 'fade-up'); ?>">
-                                    <i class="bi bi-pencil"></i>
+                                   data-slug="<?php echo htmlspecialchars($kat['slug']); ?>">
+                                    <?php echo ui_icon('edit', 'w-5 h-5'); ?>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-kategori" data-id="<?php echo (int)$kat['id']; ?>" data-nama="<?php echo htmlspecialchars($kat['nama']); ?>">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn-icon btn-del btn-delete-kategori" title="Hapus" aria-label="Hapus" data-id="<?php echo (int)$kat['id']; ?>" data-nama="<?php echo htmlspecialchars($kat['nama']); ?>">
+                                    <?php echo ui_icon('trash', 'w-5 h-5'); ?>
                                 </button>
                             </td>
                         </tr>
@@ -271,141 +301,7 @@ include __DIR__ . '/header.php';
                     <input type="text" name="slug" class="form-control"
                            value="<?php echo htmlspecialchars($action === 'add' ? ($_POST['slug'] ?? '') : ''); ?>">
                     <div class="form-text">Jika dikosongkan akan dibuat otomatis dari nama.</div>
-                </div>
-                
-                <!-- Display Settings -->
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="bi bi-grid me-2"></i>Pengaturan Tampilan</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Jumlah Grid</label>
-                            <input type="number" name="grid_count" class="form-control" min="4" max="50" value="<?php echo (int)($_POST['grid_count'] ?? 12); ?>">
-                            <div class="form-text">Jumlah berita yang ditampilkan per halaman (4-50)</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Style Grid</label>
-                            <div class="mb-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_grid" value="grid" <?php echo ($action === 'add' && ($_POST['grid_style'] ?? 'grid') === 'grid') || ($action !== 'add' && ($_POST['grid_style'] ?? 'grid') === 'grid') ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="grid_style_grid">
-                                        <i class="bi bi-grid-3x3-gap me-1"></i>Grid
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_list" value="list" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'list' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="grid_style_list">
-                                        <i class="bi bi-list-ul me-1"></i>List
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_masonry" value="masonry" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'masonry' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="grid_style_masonry">
-                                        <i class="bi bi-columns-gap me-1"></i>Masonry
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_overlay" value="overlay" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'overlay' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="grid_style_overlay">Overlay</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="grid_style_magazine" value="magazine" <?php echo isset($_POST['grid_style']) && $_POST['grid_style'] === 'magazine' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="grid_style_magazine">Magazine</label>
-                                </div>
-                            </div>
-                            <div class="form-text mb-3">Pilih tata letak tampilan berita</div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Animasi Section</label>
-                                <select name="animasi" class="form-select">
-                                    <?php $addAnim = $_POST['animasi'] ?? 'fade-up'; ?>
-                                    <?php foreach (['fade-up' => 'Fade Up', 'fade-down' => 'Fade Down', 'fade-left' => 'Fade Left', 'fade-right' => 'Fade Right', 'zoom-in' => 'Zoom In', 'flip' => 'Flip'] as $v => $l): ?>
-                                    <option value="<?php echo $v; ?>" <?php echo $addAnim === $v ? 'selected' : ''; ?>><?php echo $l; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <!-- Grid Style Previews -->
-                            <div class="grid grid-cols-3 gap-3 mt-3">
-                                <!-- Grid Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="grid">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">Grid</div>
-                                    <div class="grid grid-cols-2 gap-1" style="min-height: 80px;">
-                                        <div class="bg-gradient-to-br from-purple-100 to-purple-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-purple-100 to-purple-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- List Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="list">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">List</div>
-                                    <div class="space-y-1.5" style="min-height: 80px;">
-                                        <div class="flex gap-1.5 bg-gradient-to-r from-purple-50 to-purple-100 p-1.5 rounded">
-                                            <div class="w-8 h-8 bg-purple-300 rounded flex-shrink-0"></div>
-                                            <div class="flex-1 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-full"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-1.5 bg-gradient-to-r from-blue-50 to-blue-100 p-1.5 rounded">
-                                            <div class="w-8 h-8 bg-blue-300 rounded flex-shrink-0"></div>
-                                            <div class="flex-1 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded w-3/4"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-full"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Masonry Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="masonry">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">Masonry</div>
-                                    <div class="columns-2 gap-1.5 space-y-1.5" style="min-height: 80px;">
-                                        <div class="break-inside-avoid bg-gradient-to-br from-purple-100 to-purple-200 rounded p-1.5">
-                                            <div class="aspect-square bg-purple-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                        </div>
-                                        <div class="break-inside-avoid bg-gradient-to-br from-blue-100 to-blue-200 rounded p-1.5">
-                                            <div class="aspect-[4/3] bg-blue-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-blue-300 rounded w-3/4"></div>
-                                        </div>
-                                        <div class="break-inside-avoid bg-gradient-to-br from-purple-100 to-purple-200 rounded p-1.5">
-                                            <div class="aspect-[3/4] bg-purple-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="d-flex justify-content-between">
+                </div><div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-secondary" data-modal-close>Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan Kategori</button>
                 </div>
@@ -450,141 +346,7 @@ include __DIR__ . '/header.php';
                     <input type="text" name="slug" id="edit_slug" class="form-control"
                            value="<?php echo htmlspecialchars($editKategori['slug'] ?? ''); ?>">
                     <div class="form-text">Jika dikosongkan akan dibuat otomatis dari nama.</div>
-                </div>
-                
-                <!-- Display Settings -->
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0"><i class="bi bi-grid me-2"></i>Pengaturan Tampilan</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Jumlah Grid</label>
-                            <input type="number" name="grid_count" id="edit_grid_count" class="form-control" min="4" max="50" value="<?php echo (int)($editKategori['grid_count'] ?? 12); ?>">
-                            <div class="form-text">Jumlah berita yang ditampilkan per halaman (4-50)</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Style Grid</label>
-                            <div class="mb-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_grid" value="grid" <?php echo !isset($editKategori['grid_style']) || $editKategori['grid_style'] === 'grid' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="edit_grid_style_grid">
-                                        <i class="bi bi-grid-3x3-gap me-1"></i>Grid
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_list" value="list" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'list' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="edit_grid_style_list">
-                                        <i class="bi bi-list-ul me-1"></i>List
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_masonry" value="masonry" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'masonry' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="edit_grid_style_masonry">
-                                        <i class="bi bi-columns-gap me-1"></i>Masonry
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_overlay" value="overlay" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'overlay' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="edit_grid_style_overlay">Overlay</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="grid_style" id="edit_grid_style_magazine" value="magazine" <?php echo isset($editKategori['grid_style']) && $editKategori['grid_style'] === 'magazine' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="edit_grid_style_magazine">Magazine</label>
-                                </div>
-                            </div>
-                            <div class="form-text mb-3">Pilih tata letak tampilan berita</div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Animasi Section</label>
-                                <select name="animasi" id="edit_animasi" class="form-select">
-                                    <?php $editAnim = $editKategori['animasi'] ?? 'fade-up'; ?>
-                                    <?php foreach (['fade-up' => 'Fade Up', 'fade-down' => 'Fade Down', 'fade-left' => 'Fade Left', 'fade-right' => 'Fade Right', 'zoom-in' => 'Zoom In', 'flip' => 'Flip'] as $v => $l): ?>
-                                    <option value="<?php echo $v; ?>" <?php echo $editAnim === $v ? 'selected' : ''; ?>><?php echo $l; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <!-- Grid Style Previews -->
-                            <div class="grid grid-cols-3 gap-3 mt-3">
-                                <!-- Grid Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="grid">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">Grid</div>
-                                    <div class="grid grid-cols-2 gap-1" style="min-height: 80px;">
-                                        <div class="bg-gradient-to-br from-purple-100 to-purple-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-purple-100 to-purple-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="bg-gradient-to-br from-blue-100 to-blue-200 rounded aspect-square flex items-center justify-center">
-                                            <div class="w-3/4 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-2/3"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- List Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="list">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">List</div>
-                                    <div class="space-y-1.5" style="min-height: 80px;">
-                                        <div class="flex gap-1.5 bg-gradient-to-r from-purple-50 to-purple-100 p-1.5 rounded">
-                                            <div class="w-8 h-8 bg-purple-300 rounded flex-shrink-0"></div>
-                                            <div class="flex-1 space-y-1">
-                                                <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-full"></div>
-                                                <div class="h-1 bg-purple-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-1.5 bg-gradient-to-r from-blue-50 to-blue-100 p-1.5 rounded">
-                                            <div class="w-8 h-8 bg-blue-300 rounded flex-shrink-0"></div>
-                                            <div class="flex-1 space-y-1">
-                                                <div class="h-1.5 bg-blue-300 rounded w-3/4"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-full"></div>
-                                                <div class="h-1 bg-blue-200 rounded w-1/2"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Masonry Preview -->
-                                <div class="grid-style-preview cursor-pointer border-2 border-gray-200 rounded-lg p-3 transition-all hover:shadow-md" data-style="masonry">
-                                    <div class="text-xs font-bold text-center mb-2 text-purple-700">Masonry</div>
-                                    <div class="columns-2 gap-1.5 space-y-1.5" style="min-height: 80px;">
-                                        <div class="break-inside-avoid bg-gradient-to-br from-purple-100 to-purple-200 rounded p-1.5">
-                                            <div class="aspect-square bg-purple-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                        </div>
-                                        <div class="break-inside-avoid bg-gradient-to-br from-blue-100 to-blue-200 rounded p-1.5">
-                                            <div class="aspect-[4/3] bg-blue-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-blue-300 rounded w-3/4"></div>
-                                        </div>
-                                        <div class="break-inside-avoid bg-gradient-to-br from-purple-100 to-purple-200 rounded p-1.5">
-                                            <div class="aspect-[3/4] bg-purple-200 rounded mb-1"></div>
-                                            <div class="h-1.5 bg-purple-300 rounded w-3/4"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="d-flex justify-content-between">
+                </div><div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-secondary" data-modal-close>Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                 </div>
@@ -602,84 +364,10 @@ include __DIR__ . '/header.php';
             e.preventDefault();
             var namaInput = document.getElementById('edit_nama');
             var slugInput = document.getElementById('edit_slug');
-            var gridCountInput = document.getElementById('edit_grid_count');
-            var animasiInput = document.getElementById('edit_animasi');
             var form = document.getElementById('formEditKategori');
             if (namaInput) namaInput.value = btn.getAttribute('data-nama') || '';
             if (slugInput) slugInput.value = btn.getAttribute('data-slug') || '';
-            if (gridCountInput) gridCountInput.value = btn.getAttribute('data-grid-count') || '12';
-            if (animasiInput) animasiInput.value = btn.getAttribute('data-animasi') || 'fade-up';
-            
-            // Set grid style radio buttons
-            var gridStyle = btn.getAttribute('data-grid-style') || 'grid';
-            var gridStyleRadios = document.querySelectorAll('input[name="grid_style"]');
-            gridStyleRadios.forEach(function(radio) {
-                radio.checked = (radio.value === gridStyle);
-            });
-            
             if (form) form.action = 'kategori?action=edit&id=' + (btn.getAttribute('data-id') || '');
-        });
-    });
-    
-    // Grid style preview click handlers
-    var stylePreviews = document.querySelectorAll('.grid-style-preview');
-    stylePreviews.forEach(function(preview) {
-        preview.addEventListener('click', function() {
-            var style = this.getAttribute('data-style');
-            
-            // Find the parent form to scope the radio buttons
-            var form = this.closest('form');
-            if (!form) return;
-            
-            // Find radio button with this style in the same form
-            var radio = form.querySelector('input[name="grid_style"][value="' + style + '"]');
-            if (radio) {
-                radio.checked = true;
-                
-                // Trigger change event
-                radio.dispatchEvent(new Event('change'));
-            }
-        });
-    });
-    
-    // Highlight selected grid style preview
-    function updatePreviewHighlight(form) {
-        if (!form) return;
-        
-        var selectedStyle = form.querySelector('input[name="grid_style"]:checked');
-        if (!selectedStyle) return;
-        
-        var style = selectedStyle.value;
-        var previews = form.querySelectorAll('.grid-style-preview');
-        
-        previews.forEach(function(preview) {
-            var previewStyle = preview.getAttribute('data-style');
-            if (previewStyle === style) {
-                preview.classList.add('border-purple-500', 'bg-purple-50', 'shadow-md');
-                preview.classList.remove('border-gray-200');
-            } else {
-                preview.classList.remove('border-purple-500', 'bg-purple-50', 'shadow-md');
-                preview.classList.add('border-gray-200');
-            }
-        });
-    }
-    
-    // Add change listeners to all grid style radio buttons
-    var gridStyleRadios = document.querySelectorAll('input[name="grid_style"]');
-    gridStyleRadios.forEach(function(radio) {
-        radio.addEventListener('change', function() {
-            var form = this.closest('form');
-            updatePreviewHighlight(form);
-        });
-    });
-    
-    // Initialize preview highlights on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        var forms = document.querySelectorAll('form');
-        forms.forEach(function(form) {
-            if (form.querySelector('input[name="grid_style"]')) {
-                updatePreviewHighlight(form);
-            }
         });
     });
 
@@ -745,6 +433,70 @@ include __DIR__ . '/header.php';
             });
         });
     });
+})();
+</script>
+
+<script>
+(function () {
+    var cbs = Array.prototype.slice.call(document.querySelectorAll('.bulk-cb'));
+    var all = document.getElementById('bulkAll');
+    var btn = document.getElementById('bulkDeleteBtn');
+    var countEl = document.getElementById('bulkCount');
+
+    function refresh() {
+        var sel = cbs.filter(function (c) { return c.checked; }).length;
+        if (all) all.checked = cbs.length > 0 && sel === cbs.length;
+        if (countEl) countEl.textContent = sel;
+        if (btn) btn.disabled = sel === 0;
+    }
+
+    cbs.forEach(function (c) { c.addEventListener('change', refresh); });
+    if (all) all.addEventListener('change', function () {
+        cbs.forEach(function (c) { c.checked = all.checked; });
+        refresh();
+    });
+
+    if (btn) btn.addEventListener('click', function () {
+        var sel = cbs.filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+        if (!sel.length) return;
+        Swal.fire({
+            title: 'Hapus ' + sel.length + ' Kategori?',
+            text: 'Seluruh kategori yang masih memiliki berita akan dilewati.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            fetch('kategori?action=bulk_delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                body: 'ids=' + encodeURIComponent(sel.join(','))
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: d.message || 'Kategori berhasil dihapus',
+                        timer: 2200,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    }).then(function () { location.reload(); });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal!', text: d.error || 'Gagal menghapus kategori' });
+                }
+            })
+            .catch(function () {
+                Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan saat menghapus' });
+            });
+        });
+    });
+
+    refresh();
 })();
 </script>
 

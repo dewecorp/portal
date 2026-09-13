@@ -1,8 +1,9 @@
     </div>
 </main>
 <?php track_public_visitor($conn); ?>
-<footer class="mt-auto border-t border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900">
-    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+<div class="pb-footer-divider" aria-hidden="true"></div>
+<footer class="pb-site-footer">
+    <div class="mx-auto max-w-[1400px] px-2 sm:px-3 lg:px-4">
         <?php
         $footerSections = get_active_sections($conn, 'footer');
         render_footer_sections($conn, $settings, $navKategoris ?? [], $footerSections);
@@ -20,48 +21,59 @@
 <div id="portalToast" style="position:fixed;bottom:5.5rem;right:2rem;z-index:1000;display:none;max-width:min(22rem,calc(100vw - 4rem));background:#0f172a;color:#fff;border-radius:.9rem;padding:.8rem 1rem;font-size:.85rem;font-weight:600;box-shadow:0 18px 40px rgba(15,23,42,.35);"></div>
 <script>
 (function() {
-    // Scroll animations: sederhana + anti-macet.
-    function reveal(el) {
+    try { document.documentElement.classList.add('js-anim'); } catch (e) {}
+    var io = null;
+    function show(el) {
         if (!el || el.classList.contains('animate-in')) return;
+        // Restart paksa agar transisi selalu terpancing, lalu kunci final.
+        el.classList.remove('animate-in');
+        try { void el.offsetWidth; } catch (e) {}
         el.classList.add('animate-in');
-        el.setAttribute('data-anim-done', '1');
+    }
+    function hide(el) {
+        if (!el || !el.classList.contains('animate-in')) return;
+        el.classList.remove('animate-in');
+    }
+    function observe(el) {
+        if (!('IntersectionObserver' in window)) { show(el); return; }
+        if (!io) {
+            io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (e.isIntersecting) show(e.target);
+                    else hide(e.target);
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
+        }
+        try { io.observe(el); } catch (x) { show(el); }
     }
     function initAnimate() {
-        var els = document.querySelectorAll('[data-animate]:not([data-anim-done])');
+        var els = document.querySelectorAll('[data-animate]');
         if (!els.length) return;
-        if (!('IntersectionObserver' in window)) {
-            els.forEach(function(el, i) { setTimeout(function() { reveal(el); }, i * 80); });
-            return;
-        }
-        var seen = 0, total = els.length;
-        var io = new IntersectionObserver(function(entries) {
-            entries.forEach(function(e) {
-                if (!e.isIntersecting) return;
-                var t = e.target;
-                try { io.unobserve(t); } catch (x) {}
-                seen++;
-                reveal(t);
-            });
-        }, { threshold: 0.05, rootMargin: '0px 0px 80px 0px' });
-        els.forEach(function(el) { try { io.observe(el); } catch (x) { reveal(el); } });
-        // Pengaman: bila observer macet total (tidak ada yang reveal),
-        // tampilkan yang sedang terlihat — TANPA menandai done yang lain.
+        els.forEach(function(el) { observe(el); });
+        // Paksa cek awal: elemen di viewport ikut reveal walau observer belum callback.
         setTimeout(function() {
-            if (seen > 0) return;
-            document.querySelectorAll('[data-animate]:not([data-anim-done])').forEach(function(el) {
+            els.forEach(function(el) {
                 try {
                     var r = el.getBoundingClientRect();
-                    if (r.top < window.innerHeight && r.bottom > 0) reveal(el);
-                } catch (err) {}
+                    if (r.top < (window.innerHeight || 0) && r.bottom > 0) show(el);
+                } catch (e) { show(el); }
             });
-        }, 5000);
+        }, 400);
     }
     window.initAnimate = initAnimate;
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAnimate);
-    } else {
-        initAnimate();
+    function boot() {
+        if ('requestAnimationFrame' in window) {
+            requestAnimationFrame(function() { requestAnimationFrame(function() { setTimeout(initAnimate, 60); }); });
+        } else {
+            setTimeout(initAnimate, 60);
+        }
     }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
+    window.addEventListener('load', initAnimate);
     window.portalToast = function(msg) {
         var t = document.getElementById('portalToast');
         if (!t) return;

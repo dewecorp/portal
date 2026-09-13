@@ -109,11 +109,12 @@ include __DIR__ . '/header.php';
         ?>
 
         <!-- News Grid (Style: <?php echo ucfirst($gridStyle); ?>) -->
-        <div class="<?php echo $gridClass; ?>" data-animate="<?php echo $animasi; ?>">
+        <div class="<?php echo $gridClass; ?>">
             <?php foreach ($berita as $idx => $item): ?>
+                <?php $dly = ($idx % 3) ? ' data-animate-delay="' . ($idx % 3) . '"' : ''; ?>
                 <?php if ($gridStyle === 'overlay'): ?>
                     <!-- Overlay Style ala Elementor -->
-                    <article class="group relative h-72 overflow-hidden rounded-2xl shadow-sm card-hover" data-animate="<?php echo $animasi; ?>" data-animate-delay="<?php echo ($idx % 3); ?>">
+                    <article class="group relative h-72 overflow-hidden rounded-2xl shadow-sm card-hover" data-animate="<?php echo $animasi; ?>"<?php echo $dly; ?>>
                         <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block h-full">
                             <?php if (!empty($item['gambar'])): ?>
                                 <img loading="lazy" src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110">
@@ -130,7 +131,7 @@ include __DIR__ . '/header.php';
                     </article>
                 <?php elseif ($gridStyle === 'magazine'): ?>
                     <!-- Magazine Style: featured besar -->
-                    <article class="group overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm <?php echo $idx === 0 ? 'lg:col-span-2 lg:grid lg:grid-cols-2' : ''; ?>" data-animate="<?php echo $animasi; ?>">
+                    <article class="group overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm <?php echo $idx === 0 ? 'lg:col-span-2 lg:grid lg:grid-cols-2' : ''; ?>" data-animate="<?php echo $animasi; ?>"<?php echo $dly; ?>>
                         <?php if (!empty($item['gambar'])): ?>
                             <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block overflow-hidden image-zoom <?php echo $idx === 0 ? 'aspect-[16/9] lg:aspect-auto lg:h-full' : 'aspect-[16/10]'; ?>">
                                 <img loading="lazy" src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="h-full w-full object-cover">
@@ -147,7 +148,7 @@ include __DIR__ . '/header.php';
                     </article>
                 <?php elseif ($gridStyle === 'list'): ?>
                     <!-- List Style -->
-                    <article class="group flex flex-col sm:flex-row gap-4 p-4 rounded-2xl bg-white border border-slate-200 card-hover shadow-sm">
+                    <article class="group flex flex-col sm:flex-row gap-4 p-4 rounded-2xl bg-white border border-slate-200 card-hover shadow-sm" data-animate="<?php echo $animasi; ?>"<?php echo $dly; ?>>
                         <?php if (!empty($item['gambar'])): ?>
                             <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block w-full sm:w-48 h-48 flex-shrink-0 overflow-hidden rounded-xl image-zoom">
                                 <img src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="h-full w-full object-cover">
@@ -187,7 +188,7 @@ include __DIR__ . '/header.php';
                     </article>
                 <?php elseif ($gridStyle === 'masonry'): ?>
                     <!-- Masonry Style -->
-                    <article class="group break-inside-avoid mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm">
+                    <article class="group break-inside-avoid mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm" data-animate="<?php echo $animasi; ?>"<?php echo $dly; ?>>
                         <?php if (!empty($item['gambar'])): ?>
                             <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block image-zoom">
                                 <div class="aspect-video bg-gradient-to-br from-slate-100 to-slate-200">
@@ -214,7 +215,7 @@ include __DIR__ . '/header.php';
                     </article>
                 <?php else: ?>
                     <!-- Grid Style (Default) -->
-                    <article class="group h-full overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm">
+                    <article class="group h-full overflow-hidden rounded-2xl bg-white border border-slate-200 card-hover shadow-sm" data-animate="<?php echo $animasi; ?>"<?php echo $dly; ?>>
                         <?php if (!empty($item['gambar'])): ?>
                             <a href="<?php echo htmlspecialchars(berita_url($item)); ?>" class="block aspect-[16/10] overflow-hidden image-zoom">
                                 <img src="<?php echo htmlspecialchars(berita_image_url($item['gambar'])); ?>" alt="<?php echo htmlspecialchars($item['judul']); ?>" class="h-full w-full object-cover">

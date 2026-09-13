@@ -43,7 +43,7 @@ include __DIR__ . '/header.php';
 <?php if (empty($list)): ?><tr><td colspan="4" class="text-center text-muted py-3">Belum ada pendaftar.</td></tr>
 <?php else: foreach ($list as $i => $s): ?>
 <tr><td><?php echo $i + 1; ?></td><td><?php echo htmlspecialchars($s['email']); ?></td><td><?php echo htmlspecialchars($s['created_at']); ?></td>
-<td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger btn-del-nl" data-id="<?php echo (int)$s['id']; ?>">Hapus</button></td></tr>
+<td class="text-end"><button type="button" class="btn-icon btn-del btn-del-nl" title="Hapus" aria-label="Hapus" data-id="<?php echo (int)$s['id']; ?>"><?php echo ui_icon('trash', 'w-5 h-5'); ?></button></td></tr>
 <?php endforeach; endif; ?>
 </tbody></table>
 </div></div></div>

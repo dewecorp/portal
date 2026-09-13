@@ -119,27 +119,27 @@ function formatHariTanggalIndonesia($tanggal) {
         }
         .navbar-brand-logo {
             display: inline-flex;
-            width: 2.25rem;
-            height: 2.25rem;
+            width: 2.4rem;
+            height: 2.4rem;
             align-items: center;
             justify-content: center;
-            border-radius: 0.75rem;
-            background: rgba(255,255,255,0.18);
             color: #fff;
-            box-shadow: 0 10px 24px rgba(7, 69, 66, 0.18);
-            overflow: hidden;
             flex: 0 0 auto;
+            border-radius: 0.5rem;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0) 72%);
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.95)) drop-shadow(0 0 20px rgba(255,255,255,0.85));
         }
         .navbar-brand-logo img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            padding: 0.2rem;
+            padding: 0.15rem;
         }
         .navbar-brand-logo svg {
             width: 1.3rem;
             height: 1.3rem;
             stroke-width: 2.1;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.9));
         }
         .ms-auto {
             margin-left: auto;
@@ -221,9 +221,11 @@ function formatHariTanggalIndonesia($tanggal) {
             .col-md-2 { grid-column: span 2 / span 2; }
             .col-md-4 { grid-column: span 4 / span 4; }
             .col-md-5 { grid-column: span 5 / span 5; }
+            .col-md-6 { grid-column: span 6 / span 6; }
             .col-md-7 { grid-column: span 7 / span 7; }
             .col-md-8 { grid-column: span 8 / span 8; }
             .col-md-10 { grid-column: span 10 / span 10; }
+            .col-12 { grid-column: 1 / -1; }
             .d-md-block { display: block; }
         }
         @media (min-width: 1024px) {
@@ -254,12 +256,12 @@ function formatHariTanggalIndonesia($tanggal) {
             box-shadow: 14px 0 40px rgba(28, 82, 85, 0.05);
         }
         .sidebar-title {
-            margin: 0 0 1rem;
-            padding: 0 0.75rem;
-            color: rgba(255,255,255,0.72);
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.16em;
+            margin: 0 0 0.75rem;
+            padding: 0 0.65rem;
+            color: rgba(255,255,255,0.65);
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
         }
         .nav {
@@ -270,28 +272,28 @@ function formatHariTanggalIndonesia($tanggal) {
         .nav-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            border-radius: 0.9rem;
-            padding: 0.82rem 0.9rem;
-            color: rgba(255,255,255,0.86);
-            font-size: 0.93rem;
-            font-weight: 750;
+            gap: 0.6rem;
+            border-radius: 0.7rem;
+            padding: 0.55rem 0.7rem;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.8rem;
+            font-weight: 600;
             transition: 0.2s ease;
         }
         .nav-icon {
             display: inline-grid;
-            width: 2rem;
-            height: 2rem;
+            width: 1.65rem;
+            height: 1.65rem;
             place-items: center;
-            border-radius: 0.75rem;
+            border-radius: 0.55rem;
             background: rgba(255,255,255,0.14);
             color: #fff;
-            font-size: 0.78rem;
-            font-weight: 800;
+            font-size: 0.68rem;
+            font-weight: 700;
         }
         .nav-icon svg {
-            width: 1.1rem;
-            height: 1.1rem;
+            width: 0.95rem;
+            height: 0.95rem;
             stroke-width: 2.2;
         }
         .sidebar .nav-link.active,
@@ -310,11 +312,13 @@ function formatHariTanggalIndonesia($tanggal) {
         }
         main {
             min-height: calc(100vh - 68px);
+            display: flex;
+            flex-direction: column;
             padding: 1.75rem;
         }
         .admin-footer {
-            margin-top: 2rem;
-            padding: 1.5rem;
+            margin-top: auto;
+            padding: 2rem 1.5rem 1.5rem;
             border-top: 1px solid var(--admin-line);
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
@@ -538,10 +542,36 @@ function formatHariTanggalIndonesia($tanggal) {
         .bi-broadcast-pin {
             display: none;
         }
-        .bi-plus-lg::before { content: "+"; }
-        .bi-pencil::before { content: "Edit"; }
-        .bi-trash::before { content: "Hapus"; }
-        .bi-box-arrow-up-right::before { content: "Lihat"; }
+        .btn .svg-ic, .btn-icon svg, .menu-nav svg, .menu-act svg { flex: 0 0 auto; }
+        .btn-sm .svg-ic { width: 0.95rem; height: 0.95rem; }
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: 0.65rem;
+            border: 1px solid #dbe3ef;
+            background: #fff;
+            color: #475569;
+            font-size: 1rem;
+            line-height: 1;
+            transition: 0.18s ease;
+            padding: 0;
+        }
+        .btn-icon:hover { transform: translateY(-1px); border-color: #0f9f94; color: #0b8077; }
+        .btn-icon.btn-view { color: #475569; }
+        .btn-icon.btn-view:hover { border-color: #cbd5e1; background: #f8fafc; }
+        .btn-icon.btn-edit { color: #2563eb; border-color: #bfdbfe; }
+        .btn-icon.btn-edit:hover { background: #eff6ff; border-color: #2563eb; }
+        .btn-icon.btn-del, .btn-icon.btn-danger { color: #dc2626; border-color: #fecaca; }
+        .btn-icon.btn-del:hover, .btn-icon.btn-danger:hover { background: #fef2f2; border-color: #dc2626; }
+        .btn-icon.btn-ok { color: #047857; border-color: #a7f3d0; }
+        .btn-icon.btn-ok:hover { background: #ecfdf5; border-color: #047857; }
+        .btn-icon svg { width: 1.05rem; height: 1.05rem; }
+        .menu-nav svg, .menu-act svg { width: 1rem; height: 1rem; }
+        .sb-iconbtn svg { width: 15px; height: 15px; }
+        .sb-opt .oi svg, .sb-grid-opt svg { width: 20px; height: 20px; }
         .admin-user-menu {
             position: relative;
         }
