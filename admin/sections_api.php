@@ -115,6 +115,7 @@ try {
         $ok = $stmt->execute();
         $nid = $stmt->insert_id;
         $stmt->close();
+        admin_log($conn, 'add', "Menambahkan section: $judul");
         api_out((bool)$ok, ['id' => (int)$nid]);
     }
 
@@ -149,6 +150,7 @@ try {
         $stmt->bind_param('sssssii', $area, $tipe, $judul, $js, $anim, $aktif, $id);
         $ok = $stmt->execute();
         $stmt->close();
+        admin_log($conn, 'update', "Memperbarui section: $judul (ID: $id)");
         api_out((bool)$ok);
     }
 

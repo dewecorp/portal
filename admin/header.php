@@ -323,15 +323,21 @@ function formatHariTanggalIndonesia($tanggal) {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
         }
-        .card {
-            border-radius: 1rem;
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            background: rgba(255,255,255,0.9);
-            box-shadow: 0 18px 45px rgba(28, 82, 85, 0.08);
-            backdrop-filter: blur(12px);
-        }
-        .card-body {
-            padding: 1.35rem;
+.card {
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 18px 45px rgba(28, 82, 85, 0.08);
+    backdrop-filter: blur(12px);
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 24px 55px rgba(28, 82, 85, 0.14);
+    border-color: rgba(226, 232, 240, 1);
+}
+.card-body {
+    padding: 1.35rem;
         }
         .rounded-4 {
             border-radius: 1rem;

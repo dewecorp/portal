@@ -12,12 +12,14 @@ if (in_array($action, ['approve', 'spam', 'delete'], true) && $id > 0) {
         $stmt = $conn->prepare("DELETE FROM komentar WHERE id = ?");
         $stmt->bind_param('i', $id);
         $ok = $stmt->execute();
+        if ($ok) admin_log($conn, 'delete', "Menghapus komentar ID $id");
         $stmt->close();
     } else {
         $st = $action === 'approve' ? 'approved' : 'spam';
         $stmt = $conn->prepare("UPDATE komentar SET status = ? WHERE id = ?");
         $stmt->bind_param('si', $st, $id);
         $ok = $stmt->execute();
+        if ($ok) admin_log($conn, 'update', "Mengubah status komentar ID $id menjadi $st");
         $stmt->close();
     }
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {

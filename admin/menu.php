@@ -88,16 +88,17 @@ if ($action === 'save_order' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($action === 'delete' && $id > 0) {
     $stmt = $conn->prepare("DELETE FROM menus WHERE id = ?");
     $stmt->bind_param('i', $id);
-    if ($stmt->execute()) {
-        $stmt->close();
-        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
+if ($stmt->execute()) {
+            admin_log($conn, 'delete', "Menghapus menu ID $id");
+            $stmt->close();
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                exit;
+            }
+            header('Location: menu');
             exit;
         }
-        header('Location: menu');
-        exit;
-    }
     $stmt->close();
     
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
@@ -136,6 +137,8 @@ if (in_array($action, ['add', 'edit'], true) && $_SERVER['REQUEST_METHOD'] === '
         }
 
         if ($stmt->execute()) {
+            $logAction = $action === 'add' ? 'Menambahkan menu' : 'Memperbarui menu';
+            admin_log($conn, $action, $logAction . ": $nama");
             $stmt->close();
             $successMsg = $action === 'add' ? 'Menu berhasil ditambahkan' : 'Menu berhasil diperbarui';
             header('Location: menu?success=1');

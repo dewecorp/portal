@@ -15,8 +15,39 @@ if ($conn->connect_error) {
 
 $conn->set_charset('utf8mb4');
 
-// Set MySQL timezone
-$conn->query("SET time_zone = '+07:00'");
+function ensure_admin_logs_table(mysqli $conn): void
+{
+    static $done = false;
+    if ($done) return;
+    $conn->query("CREATE TABLE IF NOT EXISTS admin_logs (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        admin_id INT,
+        action VARCHAR(50),
+        details VARCHAR(255),
+        created_at DATETIME
+    )");
+    $done = true;
+}
+
+function admin_log(mysqli $conn, string $action, string $details) {
+    ensure_admin_logs_table($conn);
+    $admin_id = $_SESSION['admin_id'] ?? 0;
+    $stmt = $conn->prepare("INSERT INTO admin_logs (admin_id, action, details, created_at) VALUES (?, ?, ?, NOW())");
+    if ($stmt) {
+        $stmt->bind_param('iss', $admin_id, $action, $details);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
+function time_ago($datetime) {
+    $timestamp = strtotime($datetime);
+    $diff = time() - $timestamp;
+    if ($diff < 60) return 'Baru saja';
+    if ($diff < 3600) return floor($diff / 60) . ' menit lalu';
+    if ($diff < 86400) return floor($diff / 3600) . ' jam lalu';
+    return floor($diff / 86400) . ' hari lalu';
+}
 
 $settings = [
     'site_name' => 'Portal Berita',
@@ -30,6 +61,9 @@ $settings = [
     'footer_social_facebook' => null,
     'footer_social_twitter' => null,
     'footer_social_instagram' => null,
+    'footer_admin_link_url' => '/admin/login',
+    'footer_admin_link_title' => 'Login Admin',
+    'footer_admin_link_show' => 1,
     'theme_id' => 'indigo',
     'theme_color_id' => 'purple',
 ];
@@ -458,6 +492,18 @@ function ui_icon(string $name, string $cls = 'w-5 h-5'): string
         'trophy' => '<path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 5H4a3 3 0 003 5M17 5h3a3 3 0 01-3 5M12 14v4M8 21h8"/>',
         'ball' => '<circle cx="12" cy="12" r="8"/><path d="M12 7l3 2-1 3.5h-4L9 9zM12 4v3M5 10l3 1M19 10l-3 1M7 17l2-2M17 17l-2-2"/>',
         'cal' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+        'user' => '<circle cx="12" cy="8" r="3.5"/><path d="M4 21a8 8 0 0116 0"/>',
+        'key' => '<path d="M6 10v8h8v-3M10 13a3 3 0 100-6 3 3 0 000 6z"/>',
+        'exit' => '<path d="M14 6l-8 6 8 6M8 12h10M6 4h4"/>',
+        'refresh' => '<path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/>',
+        'file-text' => '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+        'folder' => '<path d="M3 6h6l2 3h10v10H3z"/>',
+        'database' => '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M3 6v12c0 1.7 4 3 9 3s9-1.3 9-3V6M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
+        'calendar' => '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+        'settings' => '<path d="M12 9a3 3 0 100 6 3 3 0 000-6M19 12h3M2 12h3M12 4V2M12 20v-2M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+        'bell' => '<path d="M6 8a6 6 0 0112 0c0 4-2 5-3 6H9c-1-1-3-2-3-6M9 17a3 3 0 006 0"/>',
+        'shield' => '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+        'chart' => '<path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/>',
     ];
     $body = $b[$name] ?? $b['info'];
     return '<svg class="' . htmlspecialchars($cls) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $body . '</svg>';

@@ -36,6 +36,7 @@ if ($action === 'delete' && $id > 0) {
         $stmt = $conn->prepare("DELETE FROM kategori WHERE id = ?");
         $stmt->bind_param('i', $id);
         if ($stmt->execute()) {
+            admin_log($conn, 'delete', "Menghapus kategori ID $id");
             $stmt->close();
             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
                 header('Content-Type: application/json');
@@ -137,6 +138,7 @@ if (in_array($action, ['add', 'edit'], true) && $_SERVER['REQUEST_METHOD'] === '
         }
 
         if ($stmt->execute()) {
+            admin_log($conn, $action, ($action === 'add' ? 'Menambah kategori: ' : 'Memperbarui kategori: ') . $nama);
             $stmt->close();
             $successAction = $action === 'add' ? 'add' : 'edit';
             header('Location: kategori?success=' . $successAction);

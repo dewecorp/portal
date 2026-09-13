@@ -55,6 +55,7 @@ function admin_login_success(mysqli $conn, string $ip): void
     $stmt->bind_param('s', $ip);
     $stmt->execute();
     $stmt->close();
+    admin_log($conn, 'login', "Login berhasil dari IP $ip");
 }
 
 function admin_is_logged_in(): bool
@@ -79,6 +80,10 @@ function admin_login(array $user): void
 
 function admin_logout(): void
 {
+    global $conn;
+    if (isset($conn)) {
+        admin_log($conn, 'logout', 'Logout dari panel admin');
+    }
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();

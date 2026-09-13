@@ -13,6 +13,7 @@ if (($_GET['action'] ?? '') === 'delete' && isset($_GET['id'])) {
     $stmt = $conn->prepare("DELETE FROM newsletter_subscribers WHERE id = ?");
     $stmt->bind_param('i', $id);
     $ok = $stmt->execute();
+    if ($ok) admin_log($conn, 'delete', "Menghapus subscriber newsletter ID $id");
     $stmt->close();
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
         header('Content-Type: application/json');
@@ -36,6 +37,11 @@ include __DIR__ . '/header.php';
 <?php if (isset($_GET['success'])): ?>
 <script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1800, showConfirmButton: false }); });</script>
 <?php endif; ?>
+<?php if (isset($_GET['success'])): ?>
+<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1800, showConfirmButton: false }); });</script>
+<?php endif; ?>
+
+<!-- Daftar Subscriber -->
 <div class="card border-0 shadow-sm rounded-4"><div class="card-body"><div class="table-responsive">
 <table class="table align-middle table-sm">
 <thead><tr><th width="60">#</th><th>Email</th><th width="200">Tanggal</th><th width="120" class="text-end">Aksi</th></tr></thead>

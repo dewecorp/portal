@@ -36,6 +36,9 @@ $extraSettingsCols = [
     'footer_social_facebook VARCHAR(255) NULL',
     'footer_social_twitter VARCHAR(255) NULL',
     'footer_social_instagram VARCHAR(255) NULL',
+    'footer_admin_link_url VARCHAR(255) NULL DEFAULT "/admin/login"',
+    'footer_admin_link_title VARCHAR(255) NULL DEFAULT "Login Admin"',
+    'footer_admin_link_show TINYINT(1) NOT NULL DEFAULT 1',
     'komentar_aktif TINYINT(1) NOT NULL DEFAULT 1',
     'komentar_moderasi TINYINT(1) NOT NULL DEFAULT 1',
     'komentar_captcha TINYINT(1) NOT NULL DEFAULT 1',
@@ -68,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $footer_social_facebook = trim($_POST['footer_social_facebook'] ?? '');
     $footer_social_twitter = trim($_POST['footer_social_twitter'] ?? '');
     $footer_social_instagram = trim($_POST['footer_social_instagram'] ?? '');
+    $footer_admin_link_url = trim($_POST['footer_admin_link_url'] ?? ($current['footer_admin_link_url'] ?? '/admin/login'));
+    $footer_admin_link_title = trim($_POST['footer_admin_link_title'] ?? ($current['footer_admin_link_title'] ?? 'Login Admin'));
+    $footer_admin_link_show = isset($_POST['footer_admin_link_show']) ? 1 : 0;
     $komentar_aktif = isset($_POST['komentar_aktif']) ? 1 : 0;
     $komentar_moderasi = isset($_POST['komentar_moderasi']) ? 1 : 0;
     $komentar_captcha = isset($_POST['komentar_captcha']) ? 1 : 0;
@@ -139,10 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === '') {
-            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ?, theme_id = ?, theme_color_id = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, footer_admin_link_url = ?, footer_admin_link_title = ?, footer_admin_link_show = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ?, theme_id = ?, theme_color_id = ? WHERE id = ?");
             $id = (int)$current['id'];
-            $stmt->bind_param('ssssissssssiiiiiissi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $theme_id, $theme_color_id, $id);
+            $stmt->bind_param('ssssissssssssiiiiiissi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $footer_admin_link_url, $footer_admin_link_title, $footer_admin_link_show, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $theme_id, $theme_color_id, $id);
             if ($stmt->execute()) {
+                admin_log($conn, 'update', 'Memperbarui pengaturan portal');
                 $success = 'Pengaturan portal berhasil disimpan.';
                 $current['site_name'] = $site_name;
                 $current['site_tagline'] = $site_tagline;
@@ -155,6 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current['footer_social_facebook'] = $footer_social_facebook;
                 $current['footer_social_twitter'] = $footer_social_twitter;
                 $current['footer_social_instagram'] = $footer_social_instagram;
+                $current['footer_admin_link_url'] = $footer_admin_link_url;
+                $current['footer_admin_link_title'] = $footer_admin_link_title;
+                $current['footer_admin_link_show'] = $footer_admin_link_show;
                 $current['komentar_aktif'] = $komentar_aktif;
                 $current['komentar_moderasi'] = $komentar_moderasi;
                 $current['komentar_captcha'] = $komentar_captcha;
@@ -294,6 +304,18 @@ include __DIR__ . '/header.php';
                     <div class="mb-3">
                         <label class="form-label">Telepon</label>
                         <input type="text" name="footer_phone" class="form-control" value="<?php echo htmlspecialchars($current['footer_phone'] ?? ''); ?>">
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Link Login Admin (di widget copyright)</label>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" name="footer_admin_link_show" id="footer_admin_link_show" value="1" <?php echo ((int)($current['footer_admin_link_show'] ?? 1) === 1) ? 'checked' : ''; ?>>
+                            <label class="form-check-label" for="footer_admin_link_show">Tampilkan Link Login Admin</label>
+                        </div>
+                        <label class="form-label mt-2">URL Link</label>
+                        <input type="text" name="footer_admin_link_url" class="form-control mb-2" value="<?php echo htmlspecialchars($current['footer_admin_link_url'] ?? '/admin/login'); ?>" placeholder="/admin/login">
+                        <label class="form-label">Judul Link</label>
+                        <input type="text" name="footer_admin_link_title" class="form-control" value="<?php echo htmlspecialchars($current['footer_admin_link_title'] ?? 'Login Admin'); ?>" placeholder="Login Admin">
                     </div>
                 </div>
             </div>

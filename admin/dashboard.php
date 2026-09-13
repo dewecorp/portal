@@ -63,11 +63,23 @@ if ($rk) {
 
 $publishRate = $totalBerita > 0 ? round(($totalPublish / $totalBerita) * 100) : 0;
 
+$logs = [];
+$logsResult = $conn->query("SELECT admin_logs.*, admin_users.username AS admin_username
+                             FROM admin_logs
+                             LEFT JOIN admin_users ON admin_users.id = admin_logs.admin_id
+                             ORDER BY admin_logs.id DESC LIMIT 50");
+if ($logsResult) {
+    while ($lr = $logsResult->fetch_assoc()) {
+        $logs[] = $lr;
+    }
+}
+$activityCount = count($logs);
+
 include __DIR__ . '/header.php';
 ?>
 
 <div class="mb-6 grid gap-4 md:grid-cols-4">
-    <div class="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-500 via-purple-500 to-purple-600 p-5 text-white shadow-lg shadow-violet-200/70">
+    <div class="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-500 via-purple-500 to-purple-600 p-5 text-white shadow-lg shadow-violet-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-violet-300/50">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
         <div class="relative">
@@ -76,10 +88,9 @@ include __DIR__ . '/header.php';
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('layers', 'w-5 h-5'); ?></span>
             </div>
             <div class="text-4xl font-black tracking-tight"><?php echo $totalKategori; ?></div>
-            <p class="mt-2 text-sm text-white/80">Kategori pengelompokan berita.</p>
         </div>
     </div>
-    <div class="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-500 via-blue-500 to-blue-600 p-5 text-white shadow-lg shadow-sky-200/70">
+    <div class="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-500 via-blue-500 to-blue-600 p-5 text-white shadow-lg shadow-sky-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-sky-300/50">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
         <div class="relative">
@@ -88,10 +99,9 @@ include __DIR__ . '/header.php';
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('news', 'w-5 h-5'); ?></span>
             </div>
             <div class="text-4xl font-black tracking-tight"><?php echo $totalBerita; ?></div>
-            <p class="mt-2 text-sm text-white/80">Semua artikel yang tersimpan.</p>
         </div>
     </div>
-    <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-600 p-5 text-white shadow-lg shadow-emerald-200/70">
+    <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-600 p-5 text-white shadow-lg shadow-emerald-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-emerald-300/50">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
         <div class="relative">
@@ -100,10 +110,9 @@ include __DIR__ . '/header.php';
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('check', 'w-5 h-5'); ?></span>
             </div>
             <div class="text-4xl font-black tracking-tight"><?php echo $totalPublish; ?> <span class="text-xl font-extrabold text-white/70"><?php echo $publishRate; ?>%</span></div>
-            <p class="mt-2 text-sm text-white/80">Artikel yang sudah tampil publik.</p>
         </div>
     </div>
-    <a href="komentar?status=pending" class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
+    <a href="komentar?status=pending" class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-300/50">>
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
         <div class="relative">
@@ -112,7 +121,6 @@ include __DIR__ . '/header.php';
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('mail', 'w-5 h-5'); ?></span>
             </div>
             <div class="text-4xl font-black tracking-tight"><?php echo (int)$totalKomentarPending; ?></div>
-            <p class="mt-2 text-sm text-white/80"><?php echo (int)$totalKomentarSpam; ?> spam &mdash; klik untuk kelola.</p>
         </div>
     </a>
 </div>
@@ -140,7 +148,7 @@ include __DIR__ . '/header.php';
             <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-teal-700">4 Aksi</span>
         </div>
         <div class="grid gap-4 sm:grid-cols-2">
-            <a href="berita?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-100">
+            <a href="berita?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-100">
                 <div class="flex items-start justify-between">
                     <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-200/60"><?php echo ui_icon('plus', 'w-5 h-5'); ?></span>
                     <span class="text-xs font-black uppercase tracking-wide text-teal-600">Editor</span>
@@ -148,7 +156,7 @@ include __DIR__ . '/header.php';
                 <div class="mt-4 font-extrabold text-slate-950">Tulis berita baru</div>
                 <div class="mt-1 text-sm text-slate-500">Buat artikel, atur kategori, dan publikasi sekaligus.</div>
             </a>
-            <a href="menu?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100">
+            <a href="menu?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100">
                 <div class="flex items-start justify-between">
                     <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-200/60"><?php echo ui_icon('panel', 'w-5 h-5'); ?></span>
                     <span class="text-xs font-black uppercase tracking-wide text-sky-600">Struktur</span>
@@ -156,7 +164,7 @@ include __DIR__ . '/header.php';
                 <div class="mt-4 font-extrabold text-slate-950">Tambah menu navigasi</div>
                 <div class="mt-1 text-sm text-slate-500">Susun kategori dan struktur halaman depan.</div>
             </a>
-            <a href="kategori" class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100">
+            <a href="kategori" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100">
                 <div class="flex items-start justify-between">
                     <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-200/60"><?php echo ui_icon('layers', 'w-5 h-5'); ?></span>
                     <span class="text-xs font-black uppercase tracking-wide text-violet-600"><?php echo $totalKategori; ?> Item</span>
@@ -164,7 +172,7 @@ include __DIR__ . '/header.php';
                 <div class="mt-4 font-extrabold text-slate-950">Kelola kategori berita</div>
                 <div class="mt-1 text-sm text-slate-500">Tambah, ubah, atau hapus kategori berita.</div>
             </a>
-            <a href="settings" class="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100">
+            <a href="settings" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100">
                 <div class="flex items-start justify-between">
                     <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200/60"><?php echo ui_icon('sliders', 'w-5 h-5'); ?></span>
                     <span class="text-xs font-black uppercase tracking-wide text-amber-600">Identitas</span>
@@ -175,6 +183,75 @@ include __DIR__ . '/header.php';
         </div>
     </div>
 </div>
+
+<section class="mt-8 mb-6 card">
+    <div class="card-body">
+        <div class="mb-6 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+                <h2 class="h6 mb-1">Aktivitas Admin</h2>
+                <p class="text-muted small mb-0">Catatan CRUD, login, dan logout secara real-time. Otomatis terhapus setelah 24 jam.</p>
+            </div>
+            <?php if ($activityCount > 0): ?>
+                <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-rose-600 border border-rose-100 shadow-sm"><?php echo $activityCount; ?> Aktivitas</span>
+            <?php endif; ?>
+        </div>
+        <?php if (empty($logs)): ?>
+            <div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">Belum ada aktivitas tercatat hari ini.</div>
+        <?php else: ?>
+            <div class="relative ml-4 border-l-2 border-slate-100 pl-8 space-y-8 py-2">
+                <?php foreach ($logs as $log):
+                    $action = $log['action'] ?? '';
+                    $details = htmlspecialchars($log['details'] ?? '');
+                    $time = time_ago($log['created_at'] ?? '');
+                    $badge = match ($action) {
+                        'login' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                        'logout' => 'bg-slate-50 text-slate-600 border-slate-200',
+                        'add' => 'bg-sky-50 text-sky-700 border-sky-200',
+                        'edit', 'update' => 'bg-amber-50 text-amber-700 border-amber-200',
+                        'delete' => 'bg-rose-50 text-rose-700 border-rose-200',
+                        default => 'bg-slate-50 text-slate-600 border-slate-200',
+                    };
+                    $icon = match ($action) {
+                        'login' => 'user',
+                        'logout' => 'exit',
+                        'add' => 'plus',
+                        'edit', 'update' => 'edit',
+                        'delete' => 'trash',
+                        default => 'info',
+                    };
+                    $iconColor = match ($action) {
+                        'login' => 'text-emerald-500',
+                        'add' => 'text-sky-500',
+                        'edit', 'update' => 'text-amber-500',
+                        'delete' => 'text-rose-500',
+                        default => 'text-slate-400',
+                    };
+                ?>
+                    <div class="relative">
+                        <!-- Dot on timeline -->
+                        <span class="absolute -left-[45px] top-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-50 shadow-sm transition group-hover:scale-110">
+                            <?php echo ui_icon($icon, 'w-3.5 h-3.5 ' . $iconColor); ?>
+                        </span>
+                        
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <span class="rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider <?php echo $badge; ?>">
+                                    <?php echo htmlspecialchars($action); ?>
+                                </span>
+                                <span class="text-xs font-bold text-slate-400"><?php echo $time; ?></span>
+                            </div>
+                            <div class="text-sm font-bold text-slate-900"><?php echo $details; ?></div>
+                            <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                                <?php echo ui_icon('user', 'w-3 h-3'); ?>
+                                <?php echo htmlspecialchars($log['admin_username'] ?? 'Admin'); ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>

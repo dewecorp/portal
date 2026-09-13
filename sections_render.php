@@ -1182,9 +1182,20 @@ function render_footer_sections(mysqli $conn, array $settings, array $navKategor
     echo '</div>';
     foreach ($bottoms as $sec) {
         $note = trim((string)section_opt(section_pengaturan($sec), 'isi', ''));
-        echo '<div class="text-center pt-8"' . section_anim_attr((string)($sec['animasi'] ?? 'fade')) . '>';
+        $showLink = (int)($settings['footer_admin_link_show'] ?? 1);
+        $linkUrl = htmlspecialchars($settings['footer_admin_link_url'] ?? '/admin/login');
+        $linkTitle = htmlspecialchars($settings['footer_admin_link_title'] ?? 'Login Admin');
+        echo '<div class="relative flex items-center justify-center pt-8"' . section_anim_attr((string)($sec['animasi'] ?? 'fade')) . '>';
         $desc = $note !== '' ? ' ' . htmlspecialchars($note) : '';
         echo '<p class="text-sm text-slate-400">&copy; ' . date('Y') . ' ' . htmlspecialchars($settings['site_name'] ?? 'Portal Berita') . '.' . $desc . '</p>';
+        if ($showLink): ?>
+            <a href="<?php echo $linkUrl; ?>" target="_blank" class="absolute right-0 text-xs text-slate-500 hover:text-white transition" title="<?php echo $linkTitle; ?>">
+                <svg class="w-3.5 h-3.5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 10v8h8v-3M10 13a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+                <?php echo $linkTitle; ?>
+            </a>
+        <?php endif;
         echo '</div>';
     }
 }

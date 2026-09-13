@@ -228,6 +228,7 @@ if ($action === 'delete' && $id > 0) {
     $stmt = $conn->prepare("DELETE FROM berita WHERE id = ?");
     $stmt->bind_param('i', $id);
     $ok = $stmt->execute();
+    if ($ok) admin_log($conn, 'delete', "Menghapus berita ID $id");
     $stmt->close();
 
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
@@ -257,7 +258,10 @@ if ($action === 'bulk_delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt = $conn->prepare("DELETE FROM berita WHERE id = ?");
         $stmt->bind_param('i', $bid);
-        if ($stmt->execute() && $stmt->affected_rows > 0) $deleted++;
+        if ($stmt->execute() && $stmt->affected_rows > 0) {
+            $deleted++;
+            admin_log($conn, 'delete', "Menghapus berita ID $bid (bulk)");
+        }
         $stmt->close();
     }
     header('Content-Type: application/json; charset=utf-8');
@@ -357,6 +361,8 @@ if (in_array($action, ['add', 'edit'], true) && $_SERVER['REQUEST_METHOD'] === '
         }
 
         if ($stmt->execute()) {
+            $logMsg = ($action === 'add' ? 'Menambah berita: ' : 'Memperbarui berita: ') . $judul;
+            admin_log($conn, $action, $logMsg);
             $stmt->close();
             header('Location: berita?success=save');
             exit;

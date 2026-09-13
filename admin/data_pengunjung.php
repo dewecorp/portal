@@ -75,25 +75,37 @@ include __DIR__ . '/header.php';
 </div>
 
 <div class="mb-6 grid gap-4 md:grid-cols-4">
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="text-sm font-bold text-slate-500">Total Kunjungan</div>
-        <div class="mt-2 text-3xl font-black text-slate-950"><?php echo number_format($totalVisits); ?></div>
-        <div class="mt-1 text-xs font-semibold text-slate-400"><?php echo htmlspecialchars($periodLabel); ?></div>
+    <div class="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-500 via-blue-500 to-blue-600 p-5 text-white shadow-lg shadow-sky-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
+        <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
+        <div class="relative">
+            <div class="text-sm font-bold text-white/80">Total Kunjungan</div>
+            <div class="mt-2 text-3xl font-black text-white"><?php echo number_format($totalVisits); ?></div>
+        </div>
     </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="text-sm font-bold text-slate-500">Pengunjung Unik</div>
-        <div class="mt-2 text-3xl font-black text-slate-950"><?php echo number_format($uniqueVisitors); ?></div>
-        <div class="mt-1 text-xs font-semibold text-slate-400">Berdasarkan IP hash</div>
+    <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-600 p-5 text-white shadow-lg shadow-emerald-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
+        <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
+        <div class="relative">
+            <div class="text-sm font-bold text-white/80">Pengunjung Unik</div>
+            <div class="mt-2 text-3xl font-black text-white"><?php echo number_format($uniqueVisitors); ?></div>
+        </div>
     </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="text-sm font-bold text-slate-500">Berita Dibaca</div>
-        <div class="mt-2 text-3xl font-black text-slate-950"><?php echo number_format($newsReads); ?></div>
-        <div class="mt-1 text-xs font-semibold text-slate-400">Kunjungan halaman detail</div>
+    <div class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
+        <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
+        <div class="relative">
+            <div class="text-sm font-bold text-white/80">Berita Dibaca</div>
+            <div class="mt-2 text-3xl font-black text-white"><?php echo number_format($newsReads); ?></div>
+        </div>
     </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="text-sm font-bold text-slate-500">Kategori Dikunjungi</div>
-        <div class="mt-2 text-3xl font-black text-slate-950"><?php echo number_format($categoryViews); ?></div>
-        <div class="mt-1 text-xs font-semibold text-slate-400">Kategori dan detail berita</div>
+    <div class="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-500 via-purple-500 to-purple-600 p-5 text-white shadow-lg shadow-violet-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
+        <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
+        <div class="relative">
+            <div class="text-sm font-bold text-white/80">Kategori Dikunjungi</div>
+            <div class="mt-2 text-3xl font-black text-white"><?php echo number_format($categoryViews); ?></div>
+        </div>
     </div>
 </div>
 
