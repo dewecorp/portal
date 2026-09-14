@@ -648,7 +648,7 @@ include __DIR__ . '/header.php';
 
     // ---------- Inspector ----------
     var FIELD_DEFS = {
-        hero: [['subjudul', 'text', 'Subjudul'], ['isi', 'textarea', 'Konten / HTML'], ['jumlah', 'slider', 'Jumlah berita (mode berita)', 1, 10], ['gambar', 'image', 'Gambar'], ['tombol_teks', 'text', 'Teks tombol'], ['tombol_link', 'text', 'Link tombol']],
+        hero: [['galeri', 'gallery', 'Gambar hero (multi — >1 jadi slider)']],
         carousel: [['galeri', 'gallery', 'Gambar'], ['autoplay', 'slider', 'Auto-slide (detik, 0 = mati)', 0, 30]],
         carousel_berita: [['jumlah', 'slider', 'Jumlah berita', 1, 12], ['kategori_id', 'kategori_pill', 'Kategori'], ['autoplay', 'slider', 'Auto-slide (detik, 0 = mati)', 0, 30]],
         kategori_berita: [['kategori_id', 'kategori_pill', 'Kategori'], ['jumlah', 'slider', 'Jumlah berita', 1, 12], ['kolom', 'segment_kolom', 'Kolom']],
@@ -760,7 +760,9 @@ include __DIR__ . '/header.php';
             h += '<div class="sb-field" style="margin:0;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px;"><span class="sb-note"><span style="display:inline-flex;vertical-align:-3px;margin-right:4px;">' + (UI.image || '') + '</span>Gambar (' + arr.length + ' gambar)</span>';
             h += '<div class="sb-gal" data-gal="' + key + '">';
             arr.forEach(function(p, i) { h += '<span class="g"><img src="../' + esc(p) + '"><button type="button" data-rm="' + i + '" data-gk="' + key + '">×</button></span>'; });
-            h += '</div><input type="file" accept="image/*" multiple data-upload-gal="' + key + '" style="margin-top:8px;font-size:12px;"></div>';
+            h += '</div><input type="file" accept="image/*" multiple data-upload-gal="' + key + '" style="margin-top:8px;font-size:12px;">';
+            h += '<input type="hidden" data-k="' + key + '" value=\'' + esc(JSON.stringify(arr)) + '\'>';
+            h += '</div>';
             return h;
         }
         else if (type === 'links') {
@@ -1086,11 +1088,10 @@ include __DIR__ . '/header.php';
                     }).finally(function() {
                         done++;
                         if (done === files.length) {
-                            var gal = inp.closest('.sb-field').querySelector('[data-gal]');
                             var curArr = (cur() && cur().cfg && Array.isArray(cur().cfg[inp.dataset.uploadGal])) ? cur().cfg[inp.dataset.uploadGal].slice() : [];
                             added.forEach(function(p) { curArr.push(p); });
                             var c = cur();
-                            if (c) { c.cfg[inp.dataset.uploadGal] = curArr; }
+                            if (c) { c.cfg[inp.dataset.uploadGal] = curArr; pendingState(c).cfg[inp.dataset.uploadGal] = curArr.slice(); }
                             renderInspector();
                             toast(added.length + ' gambar ditambahkan — klik Simpan.');
                         }
@@ -1106,6 +1107,7 @@ include __DIR__ . '/header.php';
                 var arr = (c.cfg && Array.isArray(c.cfg[gk])) ? c.cfg[gk].slice() : [];
                 arr.splice(parseInt(btn.dataset.rm, 10), 1);
                 c.cfg[gk] = arr;
+                pendingState(c).cfg[gk] = arr.slice();
                 renderInspector();
             });
         });

@@ -361,107 +361,90 @@ function render_home_section(mysqli $conn, array $sec): void
     $sid = (int)$sec['id'];
 
     if ($tipe === 'hero') {
-        $subjudul = trim((string)section_opt($cfg, 'subjudul', ''));
-        $isiHero = trim((string)section_opt($cfg, 'isi', ''));
         $gambarHero = trim((string)section_opt($cfg, 'gambar', ''));
-        $tombolTeks = trim((string)section_opt($cfg, 'tombol_teks', ''));
-        $tombolLink = trim((string)section_opt($cfg, 'tombol_link', ''));
-        if ($subjudul !== '' || $isiHero !== '' || $gambarHero !== '' || $tombolTeks !== '') {
-            $gaya = section_media_gaya_class($cfg);
+        $galeriHero = section_opt($cfg, 'galeri', []);
+        if (!is_array($galeriHero)) {
+            $tmp = json_decode((string)$galeriHero, true);
+            $galeriHero = is_array($tmp) ? array_values($tmp) : [];
+        }
+        $daftarGambar = [];
+        $sidikGambar = [];
+        foreach ($galeriHero as $g) {
+            $g = trim((string)$g);
+            if ($g === '' || in_array($g, $daftarGambar, true)) continue;
+            $full = berita_image_url($g);
+            if ($full === '') continue;
+            $lokal = preg_match('~^(https?:)?//|^data:~i', $g) ? '' : (__DIR__ . '/' . ltrim($g, '/'));
+            if ($lokal !== '') {
+                if (!is_file($lokal) || filesize($lokal) <= 0) continue;
+                $sidik = @md5_file($lokal);
+                if ($sidik !== false) {
+                    if (in_array($sidik, $sidikGambar, true)) continue;
+                    $sidikGambar[] = $sidik;
+                }
+            }
+            $daftarGambar[] = $g;
+        }
+        if ($gambarHero !== '' && !in_array($gambarHero, $daftarGambar, true)) {
+            $fullLama = berita_image_url($gambarHero);
+            $lokalLama = preg_match('~^(https?:)?//|^data:~i', $gambarHero) ? '' : (__DIR__ . '/' . ltrim($gambarHero, '/'));
+            $okLama = false;
+            if ($fullLama !== '') {
+                if ($lokalLama === '') { $okLama = true; }
+                elseif (is_file($lokalLama) && filesize($lokalLama) > 0) {
+                    $sidikLama = @md5_file($lokalLama);
+                    if ($sidikLama === false || !in_array($sidikLama, $sidikGambar, true)) {
+                        if ($sidikLama !== false) $sidikGambar[] = $sidikLama;
+                        $okLama = true;
+                    }
+                }
+            }
+            if ($okLama) array_unshift($daftarGambar, $gambarHero);
+        }
+        $tombolTeks = '';
+        $tombolLink = '';
+        $subjudul = '';
+        $isiHero = '';
+        $gaya = section_media_gaya_class($cfg);
+        $adaKonten = !empty($daftarGambar) || $judul !== '';
+        if (!$adaKonten) {
+            // Mode kosong: banner situs statis (gambar diam), bukan feed berita.
+            $tagline = trim((string)($settings['site_tagline'] ?? ''));
+            $namaSitus = trim((string)($settings['site_name'] ?? 'Portal Berita'));
             echo '<section class="mb-12"' . $animAttr . '><div class="relative overflow-hidden rounded-2xl shadow-xl bg-gradient-to-br from-emerald-600 to-teal-700" style="min-height:380px;">';
-            if ($gambarHero !== '') echo '<div class="absolute inset-0 overflow-hidden' . $gaya . '"><img src="' . htmlspecialchars(berita_image_url($gambarHero)) . '" alt="' . htmlspecialchars($judul) . '" class="h-full w-full object-cover"></div>';
             echo '<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>';
             echo '<div class="relative p-8 md:p-14 max-w-2xl">';
-            if ($judul !== '') echo '<h1 class="text-3xl md:text-5xl font-black leading-tight text-white mb-3">' . htmlspecialchars($judul) . '</h1>';
-            if ($subjudul !== '') echo '<p class="text-lg md:text-xl font-semibold text-emerald-200 mb-3">' . htmlspecialchars($subjudul) . '</p>';
-            if ($isiHero !== '') echo '<div class="text-white/85 leading-relaxed mb-6">' . nl2br(htmlspecialchars($isiHero)) . '</div>';
-            if ($tombolTeks !== '') echo '<a href="' . htmlspecialchars($tombolLink !== '' ? $tombolLink : '#') . '" class="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 font-bold text-emerald-700 shadow-lg hover:scale-105 transition">' . htmlspecialchars($tombolTeks) . '</a>';
+            echo '<h1 class="text-3xl md:text-5xl font-black leading-tight text-white mb-3">' . htmlspecialchars($namaSitus) . '</h1>';
+            if ($tagline !== '') echo '<p class="text-lg md:text-xl font-semibold text-emerald-200">' . htmlspecialchars($tagline) . '</p>';
             echo '</div></div></section>';
             return;
         }
-        $jumlah = max(1, min(10, (int)section_opt($cfg, 'jumlah', 5)));
-        $rows = [];
-        $res = $conn->query("SELECT b.*, k.nama AS kategori_nama FROM berita b LEFT JOIN kategori k ON k.id = b.kategori_id WHERE b.status = 'publish' ORDER BY b.tanggal_publikasi DESC, b.id DESC LIMIT $jumlah");
-        if ($res) while ($r = $res->fetch_assoc()) $rows[] = $r;
-        if (empty($rows)) return;
-        $cid = 'heroCarousel' . $sid;
-        $gayaHero = section_media_gaya_class($cfg);
-        ?>
-        <section class="mb-12"<?php echo $animAttr; ?>>
-            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 shadow-xl" id="<?php echo $cid; ?>">
-                <div class="relative" style="min-height: 500px;">
-                    <?php foreach ($rows as $index => $news): ?>
-                        <div class="carousel-slide absolute inset-0 transition-opacity duration-700 <?php echo $index === 0 ? 'opacity-100 z-10 visible' : 'opacity-0 z-0 invisible pointer-events-none'; ?>" data-slide="<?php echo $index; ?>" aria-hidden="<?php echo $index === 0 ? 'false' : 'true'; ?>">
-                            <a href="<?php echo htmlspecialchars(berita_url($news)); ?>" class="block h-full">
-                                <?php if (!empty($news['gambar'])): ?>
-                                    <div class="absolute inset-0 image-zoom overflow-hidden<?php echo $gayaHero; ?>"><img src="<?php echo htmlspecialchars(berita_image_url($news['gambar'])); ?>" alt="<?php echo htmlspecialchars($news['judul']); ?>" class="h-full w-full object-cover"></div>
-                                <?php else: ?>
-                                    <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500"></div>
-                                <?php endif; ?>
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                                <div class="absolute bottom-0 left-0 right-0 p-8 md:p-12">
-                                    <span class="inline-block badge-category mb-4"><?php echo htmlspecialchars($news['kategori_nama'] ?? 'Berita Terbaru'); ?></span>
-                                    <h1 class="text-3xl md:text-5xl font-black leading-tight text-white mb-4 max-w-4xl"><?php echo htmlspecialchars($news['judul']); ?></h1>
-                                    <p class="text-base md:text-lg text-white/90 line-clamp-2 mb-4 max-w-3xl"><?php echo htmlspecialchars($news['ringkasan'] ?? ''); ?></p>
-                                    <div class="flex items-center gap-4 text-sm text-white/85">
-                                        <span><?php echo formatTanggalIndonesia($news['tanggal_publikasi'], true); ?></span>
-                                        <?php if (!empty($news['penulis'])): ?><span class="text-white/40">•</span><span><?php echo htmlspecialchars($news['penulis']); ?></span><?php endif; ?>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <button type="button" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition" data-prev="<?php echo $cid; ?>"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
-                <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition" data-next="<?php echo $cid; ?>"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
-                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2" data-dots="<?php echo $cid; ?>">
-                    <?php foreach ($rows as $index => $n): ?>
-                        <button type="button" class="rounded-full transition-all <?php echo $index === 0 ? 'bg-white w-8 h-3' : 'bg-white/50 w-3 h-3'; ?>" data-slide="<?php echo $index; ?>"></button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
-        <script>
-        (function() {
-            var cid = <?php echo json_encode($cid); ?>;
-            var wrap = document.getElementById(cid);
-            if (!wrap || wrap.dataset.init) return;
-            wrap.dataset.init = '1';
-            var slides = wrap.querySelectorAll('.carousel-slide');
-            var dots = document.querySelectorAll('[data-dots="' + cid + '"] button');
-            var cur = 0, timer = null;
-            function show(i) {
-                slides.forEach(function(s, k) {
-                    var on = k === i;
-                    s.classList.toggle('opacity-100', on);
-                    s.classList.toggle('z-10', on);
-                    s.classList.toggle('visible', on);
-                    s.classList.toggle('opacity-0', !on);
-                    s.classList.toggle('z-0', !on);
-                    s.classList.toggle('invisible', !on);
-                    s.classList.toggle('pointer-events-none', !on);
-                    s.setAttribute('aria-hidden', on ? 'false' : 'true');
-                });
-                dots.forEach(function(d, k) {
-                    d.className = 'rounded-full transition-all ' + (k === i ? 'bg-white w-8 h-3' : 'bg-white/50 w-3 h-3');
-                });
-                cur = i;
+        $cid = 'heroSlider' . $sid;
+        $multi = count($daftarGambar) > 1;
+        echo '<section class="mb-12"' . $animAttr . '><div class="relative overflow-hidden rounded-2xl shadow-xl bg-gradient-to-br from-emerald-600 to-teal-700" style="min-height:380px;" id="' . $cid . '">';
+        if (!$multi) {
+            if (!empty($daftarGambar)) echo '<div class="absolute inset-0 overflow-hidden' . $gaya . '"><img src="' . htmlspecialchars(berita_image_url($daftarGambar[0])) . '" alt="' . htmlspecialchars($judul) . '" class="h-full w-full object-cover"></div>';
+        } else {
+            echo '<div class="absolute inset-0">';
+            foreach ($daftarGambar as $gi => $g) {
+                $srcG = htmlspecialchars(berita_image_url($g));
+                echo '<div class="absolute inset-0 overflow-hidden transition-opacity duration-700' . $gaya . ($gi === 0 ? ' opacity-100 z-10' : ' opacity-0 z-0') . '" data-hero-slide="' . $gi . '" style="background:#0f172a url(' . $srcG . ') center/cover no-repeat;"><img src="' . $srcG . '" alt="' . htmlspecialchars($judul) . '" class="h-full w-full object-cover"' . ($gi === 0 ? ' fetchpriority="high"' : ' loading="lazy"') . ' onerror="this.style.display=\'none\'"></div>';
             }
-            function next() { show((cur + 1) % slides.length); }
-            function prev() { show((cur - 1 + slides.length) % slides.length); }
-            function start() { timer = setInterval(next, 5000); }
-            function stop() { if (timer) clearInterval(timer); }
-            var bN = document.querySelector('[data-next="' + cid + '"]');
-            var bP = document.querySelector('[data-prev="' + cid + '"]');
-            if (bN) bN.addEventListener('click', function() { stop(); next(); start(); });
-            if (bP) bP.addEventListener('click', function() { stop(); prev(); start(); });
-            dots.forEach(function(d) { d.addEventListener('click', function() { stop(); show(parseInt(this.dataset.slide || '0', 10)); start(); }); });
-            wrap.addEventListener('mouseenter', stop);
-            wrap.addEventListener('mouseleave', start);
-            start();
-        })();
-        </script>
-        <?php
+            echo '</div>';
+        }
+        echo '<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent"></div>';
+        echo '<div class="relative p-8 md:p-14 max-w-2xl">';
+        if ($judul !== '') echo '<h1 class="text-3xl md:text-5xl font-black leading-tight text-white mb-3">' . htmlspecialchars($judul) . '</h1>';
+        echo '</div>';
+        if ($multi) {
+            echo '<button type="button" data-hero-prev="' . $cid . '" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition">‹</button>';
+            echo '<button type="button" data-hero-next="' . $cid . '" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/20 backdrop-blur-sm text-white flex items-center justify-center hover:bg-white/30 transition">›</button>';
+            echo '<div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2" data-hero-dots="' . $cid . '">';
+            foreach ($daftarGambar as $gi => $g) echo '<button type="button" data-hero-dot="' . $gi . '" class="rounded-full transition-all ' . ($gi === 0 ? 'bg-white w-8 h-3' : 'bg-white/50 w-3 h-3') . '"></button>';
+            echo '</div>';
+        }
+        echo '</div></section>';
+        if ($multi) echo '<script>(function(){var cid=' . json_encode($cid) . ',w=document.getElementById(cid);if(!w||w.dataset.init)return;w.dataset.init="1";var box=w.querySelector(".absolute.inset-0"),s=box?box.querySelectorAll("[data-hero-slide]"):[],d=document.querySelectorAll(\'[data-hero-dots="\'+cid+\'"] button\'),c=0,tm=null;function sh(i){if(!s.length)return;var n=(i+s.length)%s.length;s[n].classList.remove("opacity-0","z-0");s[n].classList.add("opacity-100","z-10");if(n!==c){(function(o){setTimeout(function(){if(c!==n)return;s[o].classList.remove("opacity-100","z-10");s[o].classList.add("opacity-0","z-0");},350);})(c);}c=n;d.forEach(function(x,k){x.className="rounded-full transition-all "+(k===c?"bg-white w-8 h-3":"bg-white/50 w-3 h-3")});}function nx(){sh(c+1)}function st(){tm=setInterval(nx,5000)}function sp(){if(tm)clearInterval(tm)}var bN=document.querySelector(\'[data-hero-next="\'+cid+\'"]\'),bP=document.querySelector(\'[data-hero-prev="\'+cid+\'"]\');if(bN)bN.addEventListener("click",function(){sp();nx();st()});if(bP)bP.addEventListener("click",function(){sp();sh(c-1);st()});d.forEach(function(x){x.addEventListener("click",function(){sp();sh(parseInt(this.dataset.heroDot||"0",10));st()})});w.addEventListener("mouseenter",sp);w.addEventListener("mouseleave",st);st()})();</script>';
         return;
     }
 
@@ -575,13 +558,26 @@ function render_home_section(mysqli $conn, array $sec): void
         if (empty($rows)) return;
         $cid = 'sbCB' . $sid;
         echo '<section class="mb-12"' . $animAttr . '>';
-        echo section_header_html($judul !== '' ? $judul : 'Sorotan Berita');
-        echo '<div class="relative"><div id="' . $cid . '" class="sb-hscroll flex gap-5 overflow-x-auto pb-2">';
-        foreach ($rows as $i => $item) echo anim_item_html(berita_card_html($item, false), $animAttr, $i, 'w-72 shrink-0');
-        echo '</div>';
+        if ($judul !== '') echo section_header_html($judul);
+        echo '<div class="relative"><div id="' . $cid . '" class="overflow-hidden rounded-2xl"><div class="flex transition-transform duration-500" data-track="' . $cid . '">';
+        foreach ($rows as $i => $item) {
+            echo '<div class="w-full shrink-0 grow-0 basis-full px-1">';
+            $url = htmlspecialchars(berita_url($item));
+            $img = berita_image_url($item['gambar'] ?? '');
+            $bg = $img !== '' ? '<img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="absolute inset-0 h-full w-full object-cover">' : '<div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>';
+            echo '<a href="' . $url . '" class="group relative block min-h-[320px] overflow-hidden rounded-2xl shadow-sm sm:min-h-[400px]">' . $bg
+                . '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>'
+                . '<div class="absolute bottom-0 p-6"><span class="inline-block badge-category mb-2">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span>'
+                . '<h3 class="text-xl font-black text-white leading-snug break-words sm:text-2xl">' . htmlspecialchars($item['judul']) . '</h3></div></a>';
+            echo '</div>';
+        }
+        echo '</div></div>';
         echo '<button type="button" data-prev="' . $cid . '" class="hidden md:flex absolute -left-5 top-1/3 w-11 h-11 rounded-full bg-white shadow-xl items-center justify-center text-xl font-black text-purple-700">‹</button>';
-        echo '<button type="button" data-next="' . $cid . '" class="hidden md:flex absolute -right-5 top-1/3 w-11 h-11 rounded-full bg-white shadow-xl items-center justify-center text-xl font-black text-purple-700">›</button></div></section>';
-        echo '<script>(function(){var cid=' . json_encode($cid) . ',w=document.getElementById(cid);if(!w)return;function go(d){w.scrollBy({left:d,behavior:"smooth"})}var bN=document.querySelector(\'[data-next="\'+cid+\'"]\'),bP=document.querySelector(\'[data-prev="\'+cid+\'"]\');if(bN)bN.addEventListener("click",function(){go(320)});if(bP)bP.addEventListener("click",function(){go(-320)});var a=' . (int)$auto . ';if(a>0)setInterval(function(){if(w.scrollLeft+w.clientWidth>=w.scrollWidth-10)w.scrollTo({left:0,behavior:"smooth"});else go(320)},a*1000)})();</script>';
+        echo '<button type="button" data-next="' . $cid . '" class="hidden md:flex absolute -right-5 top-1/3 w-11 h-11 rounded-full bg-white shadow-xl items-center justify-center text-xl font-black text-purple-700">›</button>';
+        echo '<div class="mt-4 flex justify-center gap-2" data-dots="' . $cid . '">';
+        foreach ($rows as $i => $item) echo '<button type="button" data-slide="' . $i . '" aria-label="Slide ' . ($i + 1) . '" class="rounded-full ' . ($i === 0 ? 'bg-purple-600 w-8 h-3' : 'bg-slate-300 w-3 h-3') . '"></button>';
+        echo '</div></div></section>';
+        echo '<script>(function(){var cid=' . json_encode($cid) . ',w=document.getElementById(cid);if(!w||w.dataset.init)return;w.dataset.init="1";var t=w.querySelector(\'[data-track="\'+cid+\'"]\'),n=t?t.children.length:0,d=document.querySelectorAll(\'[data-dots="\'+cid+\'"] button\'),c=0,tm=null;function sh(i){if(!n)return;c=(i+n)%n;if(t)t.style.transform="translateX(-"+(c*100)+"%)";d.forEach(function(x,k){x.className="rounded-full "+(k===c?"bg-purple-600 w-8 h-3":"bg-slate-300 w-3 h-3")});}function nx(){sh(c+1)}function st(){var a=' . (int)$auto . ';if(a>0)tm=setInterval(nx,a*1000)}function sp(){if(tm)clearInterval(tm)}var bN=document.querySelector(\'[data-next="\'+cid+\'"]\'),bP=document.querySelector(\'[data-prev="\'+cid+\'"]\');if(bN)bN.addEventListener("click",function(){sp();nx();st()});if(bP)bP.addEventListener("click",function(){sp();sh(c-1);st()});d.forEach(function(x){x.addEventListener("click",function(){sp();sh(parseInt(this.dataset.slide||"0",10));st()})});w.addEventListener("mouseenter",sp);w.addEventListener("mouseleave",st);st()})();</script>';
         return;
     }
 

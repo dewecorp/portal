@@ -590,7 +590,7 @@ function section_gaya_gambar_list(): array
 function section_default_cfg(string $tipe): array
 {
     switch ($tipe) {
-        case 'hero': return ['jumlah' => 5, 'subjudul' => '', 'isi' => '', 'gambar' => '', 'gaya_gambar' => 'kenburns', 'tombol_teks' => '', 'tombol_link' => ''];
+        case 'hero': return ['jumlah' => 5, 'subjudul' => '', 'isi' => '', 'gambar' => '', 'galeri' => [], 'gaya_gambar' => 'kenburns', 'tombol_teks' => '', 'tombol_link' => ''];
         case 'carousel': return ['galeri' => [], 'gaya_gambar' => 'kenburns', 'autoplay' => 5];
         case 'carousel_berita': return ['jumlah' => 8, 'kategori_id' => 0, 'autoplay' => 5];
         case 'kategori_berita':
