@@ -112,7 +112,7 @@ include __DIR__ . '/header.php';
             <div class="text-4xl font-black tracking-tight"><?php echo $totalPublish; ?> <span class="text-xl font-extrabold text-white/70"><?php echo $publishRate; ?>%</span></div>
         </div>
     </div>
-    <a href="komentar?status=pending" class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-300/50">>
+    <a href="komentar?status=pending" class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-300/50">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
         <div class="relative">

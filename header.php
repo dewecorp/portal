@@ -446,6 +446,9 @@ foreach ($navMenus as &$menu) {
         .news-content * {
             overflow-wrap: anywhere;
             word-break: normal;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: inherit !important;
+            line-height: inherit !important;
         }
         .news-content iframe,
         .news-content video,
@@ -465,7 +468,13 @@ foreach ($navMenus as &$menu) {
             margin-top: 1.5rem;
             margin-bottom: 0.75rem;
             color: #0f172a;
+            line-height: 1.3 !important;
         }
+        .news-content h2 { font-size: 1.5rem !important; }
+        .news-content h3 { font-size: 1.25rem !important; }
+        .news-content h4 { font-size: 1.125rem !important; }
+        .news-content h5, .news-content h6 { font-size: 1rem !important; }
+        .news-content p, .news-content li, .news-content div, .news-content span, .news-content a { font-size: 1.125rem !important; line-height: 2 !important; }
         .news-content ul, .news-content ol {
             margin-bottom: 1rem;
             padding-left: 1.5rem;
@@ -498,11 +507,32 @@ foreach ($navMenus as &$menu) {
         .news-content figure.image img { margin-top: 0; margin-bottom: 0; }
         .news-content figcaption { text-align: center; font-size: 0.8rem; color: #64748b; padding: 0.4rem 0; }
         .news-content a {
-            color: var(--pb-accent);
-            text-decoration: underline;
+            color: var(--pb-accent-deep);
+            text-decoration: none !important;
+            font-weight: 700;
+            border-bottom: 2px solid var(--pb-accent);
+            padding-bottom: 1px;
+            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
         }
         .news-content a:hover {
             color: var(--pb-accent-deep);
+            border-bottom-color: var(--pb-accent-deep);
+            background-color: var(--pb-hover);
+            border-radius: 0.2em;
+        }
+        .news-content a[style*="underline"], .news-content a u {
+            text-decoration: none !important;
+        }
+        .news-content a[target="_blank"]::after {
+            content: '';
+            display: inline-block;
+            width: 0.7em;
+            height: 0.7em;
+            margin-left: 0.25em;
+            background-color: currentColor;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25'/%3E%3C/svg%3E") no-repeat center / contain;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25'/%3E%3C/svg%3E") no-repeat center / contain;
+            vertical-align: baseline;
         }
         .news-content table {
             width: 100%;
