@@ -162,6 +162,15 @@
             trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
 
+        var closeTimer = null;
+        menu.addEventListener('mouseleave', function () {
+            clearTimeout(closeTimer);
+            closeTimer = setTimeout(closeUserMenu, 300);
+        });
+        menu.addEventListener('mouseenter', function () {
+            clearTimeout(closeTimer);
+        });
+
         document.addEventListener('click', function (event) {
             if (!menu.contains(event.target)) {
                 closeUserMenu();
@@ -202,7 +211,10 @@
             try { sessionStorage.removeItem('adminNav'); } catch (e) {}
         } else {
             try {
-                if (sessionStorage.getItem('adminNav') === '1') {
+                var justLoggedIn = /[?&]login=success(&|$)/.test(window.location.search || '');
+                if (justLoggedIn) {
+                    sessionStorage.removeItem('adminNav');
+                } else if (sessionStorage.getItem('adminNav') === '1') {
                     sessionStorage.removeItem('adminNav');
                     requestAnimationFrame(function() {
                         requestAnimationFrame(function() {

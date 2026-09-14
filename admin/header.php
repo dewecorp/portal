@@ -12,6 +12,7 @@ $adminMenuNames = [
     'kategori.php' => 'Kategori',
     'berita.php' => 'Berita',
     'komentar.php' => 'Komentar',
+    'pengguna.php' => 'Pengguna',
     'newsletter.php' => 'Newsletter',
     'data_pengunjung.php' => 'Data Pengunjung',
     'backup.php' => 'Backup & Restore',
@@ -660,6 +661,19 @@ function formatHariTanggalIndonesia($tanggal) {
         .admin-user-menu:hover .admin-user-dropdown {
             display: block;
         }
+        .admin-user-menu::after {
+            content: '';
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 0.7rem;
+        }
+        .admin-user-menu:hover::after,
+        .admin-user-menu.is-open::after {
+            display: block;
+        }
         .admin-user-menu:hover .admin-user-caret {
             transform: rotate(180deg);
         }
@@ -900,8 +914,8 @@ function formatHariTanggalIndonesia($tanggal) {
             </span>
             <div class="admin-user-menu" id="adminUserMenu">
                 <button type="button" class="admin-user-trigger" id="adminUserTrigger" aria-expanded="false" aria-haspopup="true">
-                    <span class="admin-user-avatar">AD</span>
-                    <span><?php echo htmlspecialchars($_SESSION['admin_nama'] ?? $_SESSION['admin_username'] ?? 'Admin'); ?></span>
+                    <span class="admin-user-avatar"><?php echo strtoupper(substr($_SESSION['admin_nama'] ?? 'A', 0, 1)); ?></span>
+                    <span><?php echo htmlspecialchars($_SESSION['admin_nama'] ?? 'Admin'); ?></span>
                     <svg class="admin-user-caret" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
@@ -992,6 +1006,16 @@ function formatHariTanggalIndonesia($tanggal) {
                         <?php if ($pendingKomentarCount > 0): ?>
                             <span class="ms-auto rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black text-white"><?php echo $pendingKomentarCount > 99 ? '99+' : $pendingKomentarCount; ?></span>
                         <?php endif; ?>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'pengguna.php' ? 'active' : ''; ?>" href="pengguna">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 8.048M12 4.354a4 4 0 110 8.048M15 19H9a6 6 0 0112 0M15 19h4a2 2 0 002-2v-6a2 2 0 00-2-2h-4M5 19H1a2 2 0 01-2-2v-6a2 2 0 012-2h4"></path>
+                            </svg>
+                        </span>
+                        <span>Pengguna</span>
                     </a>
                 </li>
                 <li class="nav-item mb-1">

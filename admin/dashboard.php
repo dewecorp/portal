@@ -77,6 +77,15 @@ $activityCount = count($logs);
 
 include __DIR__ . '/header.php';
 ?>
+<?php if (isset($_GET['login']) && $_GET['login'] === 'success'): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.Swal) {
+        Swal.fire({ icon: 'success', title: 'Login Berhasil!', text: 'Selamat datang kembali.', timer: 2200, timerProgressBar: true, showConfirmButton: false });
+    }
+});
+</script>
+<?php endif; ?>
 
 <div class="mb-6 grid gap-4 md:grid-cols-4">
     <div class="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-500 via-purple-500 to-purple-600 p-5 text-white shadow-lg shadow-violet-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-violet-300/50">

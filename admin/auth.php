@@ -63,11 +63,65 @@ function admin_is_logged_in(): bool
     return isset($_SESSION['admin_id']);
 }
 
+function admin_idle_timeout(): int
+{
+    return 7200;
+}
+
+function admin_touch_activity(): void
+{
+    $_SESSION['admin_last_activity'] = time();
+}
+
+function admin_check_idle(): bool
+{
+    if (!admin_is_logged_in()) return false;
+    $last = (int)($_SESSION['admin_last_activity'] ?? 0);
+    if ($last > 0 && (time() - $last) > admin_idle_timeout()) {
+        admin_logout();
+        header('Location: login?expired=1');
+        exit;
+    }
+    admin_touch_activity();
+    return true;
+}
+
 function admin_require_login(): void
 {
     if (!admin_is_logged_in()) {
         header('Location: login');
         exit;
+    }
+    admin_check_idle();
+}
+
+function admin_get_role(): string
+{
+    return $_SESSION['admin_role'] ?? 'author';
+}
+
+function admin_can_manage_users(): bool
+{
+    return admin_get_role() === 'administrator';
+}
+
+function admin_can_edit_content(): bool
+{
+    $role = admin_get_role();
+    return in_array($role, ['administrator', 'author', 'editor'], true);
+}
+
+function admin_can_publish(): bool
+{
+    $role = admin_get_role();
+    return in_array($role, ['administrator', 'author'], true);
+}
+
+function admin_require_role(string $role): void
+{
+    if (admin_get_role() !== $role && admin_get_role() !== 'administrator') {
+        http_response_code(403);
+        die('Akses ditolak. Role tidak sesuai.');
     }
 }
 
@@ -76,6 +130,8 @@ function admin_login(array $user): void
     $_SESSION['admin_id'] = $user['id'];
     $_SESSION['admin_nama'] = $user['nama'];
     $_SESSION['admin_username'] = $user['username'];
+    $_SESSION['admin_role'] = $user['role'] ?? 'author';
+    admin_touch_activity();
 }
 
 function admin_logout(): void
