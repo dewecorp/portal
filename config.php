@@ -64,6 +64,7 @@ $settings = [
     'footer_admin_link_url' => '/admin/login',
     'footer_admin_link_title' => 'Login Admin',
     'footer_admin_link_show' => 1,
+    'brand_display' => 'both',
     'theme_id' => 'indigo',
     'theme_color_id' => 'purple',
 ];
@@ -206,6 +207,7 @@ function ensure_portal_extras(mysqli $conn): void
         "komentar_kata_kasar TEXT NULL",
         "theme_id VARCHAR(50) NOT NULL DEFAULT 'indigo'",
         "theme_color_id VARCHAR(50) NOT NULL DEFAULT 'purple'",
+        "brand_display VARCHAR(20) NOT NULL DEFAULT 'both'",
     ];
     foreach ($settingsCols as $def) {
         $name = explode(' ', trim($def))[0];
@@ -870,4 +872,6 @@ if ($resultSettings && $resultSettings->num_rows > 0) {
     $settings['komentar_interval_detik'] = max(5, min(600, (int)($row['komentar_interval_detik'] ?? 30)));
     $settings['theme_id'] = (string)($row['theme_id'] ?? $settings['theme_id']);
     $settings['theme_color_id'] = (string)($row['theme_color_id'] ?? $settings['theme_color_id']);
+    $bd = strtolower(trim((string)($row['brand_display'] ?? $settings['brand_display'] ?? 'both')));
+    $settings['brand_display'] = in_array($bd, ['logo', 'text', 'both'], true) ? $bd : 'both';
 }

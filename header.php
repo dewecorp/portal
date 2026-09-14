@@ -676,6 +676,10 @@ foreach ($navMenus as &$menu) {
         /* SectionBuilder: carousel berita horizontal */
         .sb-hscroll { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
         .sb-hscroll > * { scroll-snap-align: start; }
+        /* Navbar mobile: tampil vertikal saat hamburger diklik */
+        @media (max-width: 1023.5px) {
+            #mainNav.mobile-open { display: flex; flex-direction: column; align-items: stretch; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border-bottom: 1px solid rgba(226,232,240,.8); padding: 0.75rem; gap: 0.25rem; box-shadow: 0 18px 40px rgba(15,23,42,.12); }
+        }
     </style>
     <noscript><style>[data-animate]{opacity:1 !important;transform:none !important;}</style></noscript>
 </head>
@@ -696,43 +700,35 @@ foreach ($navMenus as &$menu) {
     </div>
 </div>
 
-<!-- Main Header -->
+<!-- Navbar (brand + menu + cari) -->
 <header class="sticky top-0 z-[60] border-b border-slate-200/50 bg-white/90 backdrop-blur-md shadow-sm">
-    <div class="mx-auto flex max-w-[1400px] items-center justify-between px-2 py-4 sm:px-3 lg:px-4">
-        <a href="index" class="flex items-center gap-3 no-underline group">
-            <?php if (!empty($settings['logo_path'])): ?>
-                <img src="<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="<?php echo htmlspecialchars($settings['site_name'] ?? 'Portal'); ?>" class="h-12 w-auto transition group-hover:scale-105">
+    <div class="mx-auto flex max-w-[1400px] items-center gap-4 px-2 py-3 sm:px-3 lg:px-4">
+        <?php
+        $brandMode = strtolower(trim((string)($settings['brand_display'] ?? 'both')));
+        if (!in_array($brandMode, ['logo', 'text', 'both'], true)) $brandMode = 'both';
+        $showLogo = $brandMode !== 'text' && !empty($settings['logo_path']);
+        $showText = $brandMode !== 'logo';
+        ?>
+        <a href="index" class="flex shrink-0 items-center gap-3 no-underline group">
+            <?php if ($showLogo): ?>
+                <img src="<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="<?php echo htmlspecialchars($settings['site_name'] ?? 'Portal'); ?>" class="h-10 w-auto transition group-hover:scale-105">
             <?php endif; ?>
-            <div>
-                <span class="text-3xl font-black uppercase tracking-wide bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"><?php echo htmlspecialchars($settings['site_name'] ?? 'Portal Berita'); ?></span>
-                <p class="text-xs text-slate-500 font-medium -mt-1">Berita Terkini & Terpercaya</p>
-            </div>
+            <?php if ($showText): ?>
+                <span class="text-xl font-black uppercase tracking-wide bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"><?php echo htmlspecialchars($settings['site_name'] ?? 'Portal Berita'); ?></span>
+            <?php endif; ?>
         </a>
-        <div class="hidden lg:flex items-center gap-3">
-            <form action="cari" method="get" class="relative">
-                <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="Cari berita..." class="pl-10 pr-4 py-2 rounded-full border border-slate-200 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition w-64 text-sm">
-                <button type="submit" aria-label="Cari" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                </button>
-            </form>
-        </div>
-    </div>
-</header>
-
-<!-- Navigation -->
-<nav class="border-b border-slate-200/50 bg-white/80 backdrop-blur-sm sticky top-[73px] z-50">
-    <div class="mx-auto max-w-[1400px] px-2 sm:px-3 lg:px-4">
-        <div class="main-nav-inner flex gap-1 overflow-x-visible py-2">
-            <a href="index" class="shrink-0 rounded-full px-5 py-2 text-sm font-bold uppercase tracking-wide text-white bg-gradient-to-r from-purple-600 to-blue-600 transition hover:shadow-lg hover:shadow-purple-200">
+        <button type="button" id="navToggle" class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-700 lg:hidden" aria-label="Buka menu" aria-expanded="false">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
+        <nav class="hidden flex-1 items-center gap-1 lg:flex" id="mainNav">
+            <a href="index" class="shrink-0 rounded-full px-4 py-2 text-sm font-bold capitalize tracking-wide text-white bg-gradient-to-r from-purple-600 to-blue-600 transition hover:shadow-lg hover:shadow-purple-200">
                 Beranda
             </a>
             <?php foreach ($navMenus as $navMenu): ?>
                 <?php if ($navMenu['menu_type'] === 'dropdown'): ?>
                     <!-- Dropdown Menu -->
                     <div class="nav-item-main shrink-0">
-                        <a class="block rounded-full px-5 py-2 text-sm font-bold uppercase tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
+                        <a class="block rounded-full px-4 py-2 text-sm font-bold capitalize tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
                            href="#">
                             <?php echo htmlspecialchars($navMenu['nama']); ?>
                             <svg class="w-3 h-3 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -752,7 +748,7 @@ foreach ($navMenus as &$menu) {
                 <?php elseif ($navMenu['menu_type'] === 'mega'): ?>
                     <!-- Mega Menu -->
                     <div class="nav-item-main shrink-0">
-                        <a class="block rounded-full px-5 py-2 text-sm font-bold uppercase tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
+                        <a class="block rounded-full px-4 py-2 text-sm font-bold capitalize tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
                            href="#">
                             <?php echo htmlspecialchars($navMenu['nama']); ?>
                             <svg class="w-3 h-3 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -863,16 +859,34 @@ foreach ($navMenus as &$menu) {
                 <?php else: ?>
                     <!-- Regular Link Menu -->
                     <div class="nav-item-main shrink-0">
-                        <a class="block rounded-full px-5 py-2 text-sm font-bold uppercase tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
+                        <a class="block rounded-full px-4 py-2 text-sm font-bold capitalize tracking-wide text-slate-700 transition hover:bg-purple-50 hover:text-purple-700"
                            href="kategori?kategori=<?php echo (int)$navMenu['kategori_id']; ?>">
                             <?php echo htmlspecialchars($navMenu['nama']); ?>
                         </a>
                     </div>
                 <?php endif; ?>
             <?php endforeach; ?>
-        </div>
+        </nav>
+        <form action="cari" method="get" class="relative ml-auto hidden shrink-0 lg:block">
+            <input type="text" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? ''); ?>" placeholder="Cari berita..." class="pl-10 pr-4 py-2 rounded-full border border-slate-200 bg-slate-50 focus:bg-white focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition w-48 xl:w-64 text-sm">
+            <button type="submit" aria-label="Cari" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            </button>
+        </form>
     </div>
-</nav>
+</header>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var t = document.getElementById('navToggle'), n = document.getElementById('mainNav');
+    if (!t || !n) return;
+    t.addEventListener('click', function() {
+        var open = n.classList.toggle('mobile-open');
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+});
+</script>
 
 <!-- Mega Menu & Dropdown Dynamic Positioning Script -->
 <script>

@@ -47,6 +47,7 @@ $extraSettingsCols = [
     'komentar_kata_kasar TEXT NULL',
     "theme_id VARCHAR(50) NOT NULL DEFAULT 'indigo'",
     "theme_color_id VARCHAR(50) NOT NULL DEFAULT 'purple'",
+    "brand_display VARCHAR(20) NOT NULL DEFAULT 'both'",
 ];
 $needRefresh = false;
 foreach ($extraSettingsCols as $col) {
@@ -86,6 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!array_key_exists($theme_color_id, site_theme_accents())) $theme_color_id = 'purple';
     $logo_path = $current['logo_path'] ?? null;
     $favicon_path = $current['favicon_path'] ?? null;
+    $brand_display = strtolower(trim((string)($_POST['brand_display'] ?? ($current['brand_display'] ?? 'both'))));
+    if (!in_array($brand_display, ['logo', 'text', 'both'], true)) $brand_display = 'both';
 
     if ($site_name === '') {
         $error = 'Nama portal wajib diisi.';
@@ -145,9 +148,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === '') {
-            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, footer_admin_link_url = ?, footer_admin_link_title = ?, footer_admin_link_show = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ?, theme_id = ?, theme_color_id = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE settings SET site_name = ?, site_tagline = ?, logo_path = ?, favicon_path = ?, latest_news_count = ?, footer_email = ?, footer_address = ?, footer_phone = ?, footer_social_facebook = ?, footer_social_twitter = ?, footer_social_instagram = ?, footer_admin_link_url = ?, footer_admin_link_title = ?, footer_admin_link_show = ?, komentar_aktif = ?, komentar_moderasi = ?, komentar_captcha = ?, komentar_max_links = ?, komentar_interval_detik = ?, komentar_kata_kasar = ?, theme_id = ?, theme_color_id = ?, brand_display = ? WHERE id = ?");
             $id = (int)$current['id'];
-            $stmt->bind_param('ssssissssssssiiiiiissi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $footer_admin_link_url, $footer_admin_link_title, $footer_admin_link_show, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $theme_id, $theme_color_id, $id);
+            $stmt->bind_param('ssssissssssssiiiiiissssi', $site_name, $site_tagline, $logo_path, $favicon_path, $latest_news_count, $footer_email, $footer_address, $footer_phone, $footer_social_facebook, $footer_social_twitter, $footer_social_instagram, $footer_admin_link_url, $footer_admin_link_title, $footer_admin_link_show, $komentar_aktif, $komentar_moderasi, $komentar_captcha, $komentar_max_links, $komentar_interval_detik, $komentar_kata_kasar, $theme_id, $theme_color_id, $brand_display, $id);
             if ($stmt->execute()) {
                 admin_log($conn, 'update', 'Memperbarui pengaturan portal');
                 $success = 'Pengaturan portal berhasil disimpan.';
@@ -173,6 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current['komentar_kata_kasar'] = $komentar_kata_kasar;
                 $current['theme_id'] = $theme_id;
                 $current['theme_color_id'] = $theme_color_id;
+                $current['brand_display'] = $brand_display;
             } else {
                 $error = 'Terjadi kesalahan saat menyimpan pengaturan.';
             }
@@ -262,6 +266,18 @@ include __DIR__ . '/header.php';
                     <div class="mb-3">
                         <label class="form-label">Tagline Portal</label>
                         <input type="text" name="site_tagline" class="form-control" value="<?php echo htmlspecialchars($current['site_tagline'] ?? ''); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tampilan Brand di Navbar</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php foreach (['logo' => 'Logo saja', 'text' => 'Teks saja', 'both' => 'Logo + Teks'] as $bKey => $bLabel): ?>
+                                <label class="form-check-label border rounded px-3 py-2">
+                                    <input type="radio" name="brand_display" value="<?php echo $bKey; ?>" class="form-check-input me-1" <?php echo ($current['brand_display'] ?? 'both') === $bKey ? 'checked' : ''; ?>>
+                                    <?php echo $bLabel; ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="form-text">Atur brand navbar: tampilkan logo saja, teks nama portal saja, atau keduanya (seperti WordPress Customizer).</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Logo Portal</label>
