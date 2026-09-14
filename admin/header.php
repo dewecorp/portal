@@ -14,6 +14,7 @@ $adminMenuNames = [
     'komentar.php' => 'Komentar',
     'newsletter.php' => 'Newsletter',
     'data_pengunjung.php' => 'Data Pengunjung',
+    'backup.php' => 'Backup & Restore',
     'settings.php' => 'Pengaturan'
 ];
 
@@ -279,6 +280,25 @@ function formatHariTanggalIndonesia($tanggal) {
             font-size: 0.8rem;
             font-weight: 600;
             transition: 0.2s ease;
+        }
+        .sidebar-logout {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.16);
+        }
+        .sidebar-logout .nav-link {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(220,38,38,0.35);
+        }
+        .sidebar-logout .nav-link:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: #fff;
+            transform: translateX(2px);
+        }
+        .sidebar-logout .nav-icon {
+            background: rgba(255,255,255,0.22);
+            color: #fff;
         }
         .nav-icon {
             display: inline-grid;
@@ -939,6 +959,17 @@ function formatHariTanggalIndonesia($tanggal) {
                     </a>
                 </li>
                 <li class="nav-item mb-1">
+                    <a class="nav-link <?php echo $currentAdminPage === 'backup.php' ? 'active' : ''; ?>" href="backup">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 4h11l3 3v13H5z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 4v5h7V4M8 21v-7h8v7"></path>
+                            </svg>
+                        </span>
+                        <span>Backup &amp; Restore</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
                     <a class="nav-link <?php echo $currentAdminPage === 'settings.php' ? 'active' : ''; ?>" href="settings">
                         <span class="nav-icon" aria-hidden="true">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -947,6 +978,16 @@ function formatHariTanggalIndonesia($tanggal) {
                             </svg>
                         </span>
                         <span>Pengaturan</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1 sidebar-logout">
+                    <a class="nav-link" href="logout" id="sidebarLogout">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14 6l-8 6 8 6M8 12h10M6 4h4"></path>
+                            </svg>
+                        </span>
+                        <span>Logout</span>
                     </a>
                 </li>
             </ul>

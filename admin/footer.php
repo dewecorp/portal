@@ -156,6 +156,18 @@
             }
         });
     })();
+
+    // Konfirmasi logout sidebar
+    (function () {
+        var btn = document.getElementById('sidebarLogout');
+        if (!btn) return;
+        btn.addEventListener('click', function (event) {
+            event.preventDefault();
+            Swal.fire({ title: 'Logout?', text: 'Anda akan keluar dari panel admin.', icon: 'question', showCancelButton: true, confirmButtonText: 'Ya, Logout', cancelButtonText: 'Batal' }).then(function (r) {
+                if (r.isConfirmed) window.location.href = btn.getAttribute('href');
+            });
+        });
+    })();
     
     // Live datetime functionality for admin navbar
     (function() {
