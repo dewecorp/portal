@@ -187,9 +187,48 @@
         });
     })();
     
-    // Live datetime functionality for admin navbar
+    // Admin page-transition loader: tampil saat pindah laman, bukan saat reload
     (function() {
-        var dateTimeElement = document.getElementById('adminDateTime');
+        var loader = document.getElementById('adminLoader');
+        if (!loader) return;
+        var show = function() { loader.classList.add('is-show'); };
+        var hide = function() { loader.classList.remove('is-show'); };
+        var navEntry = null;
+        try {
+            var entries = performance.getEntriesByType('navigation');
+            navEntry = entries && entries.length ? entries[0].type : null;
+        } catch (e) {}
+        if (navEntry === 'reload') {
+            try { sessionStorage.removeItem('adminNav'); } catch (e) {}
+        } else {
+            try {
+                if (sessionStorage.getItem('adminNav') === '1') {
+                    sessionStorage.removeItem('adminNav');
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            show();
+                            setTimeout(hide, 900);
+                        });
+                    });
+                }
+            } catch (e) {}
+        }
+        document.addEventListener('click', function(e) {
+            var a = e.target.closest ? e.target.closest('a[href]') : null;
+            if (!a) return;
+            var href = a.getAttribute('href') || '';
+            if (href.charAt(0) === '#' || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (href.indexOf('javascript:') === 0) return;
+            try { sessionStorage.setItem('adminNav', '1'); } catch (e) {}
+        }, true);
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) hide();
+        });
+        window.addEventListener('pagehide', function() { hide(); });
+    })();
+
+    // Live datetime functionality for admin navbar
+    (function() {        var dateTimeElement = document.getElementById('adminDateTime');
         if (!dateTimeElement) return;
         
         var hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];

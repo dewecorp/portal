@@ -817,9 +817,65 @@ function formatHariTanggalIndonesia($tanggal) {
             background: rgba(255,255,255,0.18) !important;
             color: #ffffff !important;
         }
+        .admin-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(238, 247, 246, 0.55);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        .admin-loader.is-show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .admin-loader-ring {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            display: grid;
+            place-items: center;
+        }
+        .admin-loader-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 5px solid rgba(15, 159, 148, 0.18);
+            border-top-color: #0f9f94;
+            animation: admin-loader-spin 0.9s linear infinite;
+        }
+        .admin-loader-logo {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 16px;
+            background: #fff;
+            padding: 6px;
+            box-shadow: 0 10px 30px rgba(22, 48, 52, 0.15);
+        }
+        @keyframes admin-loader-spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+<div class="admin-loader" id="adminLoader" aria-hidden="true">
+    <div class="admin-loader-ring">
+        <?php if (!empty($settings['logo_path'])): ?>
+            <img class="admin-loader-logo" src="../<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="">
+        <?php else: ?>
+            <img class="admin-loader-logo" src="../assets/logo.png" alt="" onerror="this.style.display='none'">
+        <?php endif; ?>
+    </div>
+</div>
 <nav class="navbar navbar-expand navbar-dark navbar-admin">
     <div class="container-fluid">
         <a class="navbar-brand" href="dashboard">

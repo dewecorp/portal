@@ -61,8 +61,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .admin-loader { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(2, 6, 23, 0.45); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.25s ease, visibility 0.25s ease; }
+        .admin-loader.is-show { opacity: 1; visibility: visible; pointer-events: auto; }
+        .admin-loader-ring { position: relative; width: 110px; height: 110px; display: grid; place-items: center; }
+        .admin-loader-ring::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 5px solid rgba(255,255,255,0.18); border-top-color: #ef4444; animation: admin-loader-spin 0.9s linear infinite; }
+        .admin-loader-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 16px; background: #fff; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+        @keyframes admin-loader-spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-950 antialiased">
+<div class="admin-loader" id="adminLoader" aria-hidden="true">
+    <div class="admin-loader-ring">
+        <?php if (!empty($settings['logo_path'])): ?>
+            <img class="admin-loader-logo" src="../<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="">
+        <?php else: ?>
+            <span class="admin-loader-logo" style="display:grid;place-items:center;font-weight:900;color:#ef4444;">AD</span>
+        <?php endif; ?>
+    </div>
+</div>
 <div class="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_#1e293b_0,_#0f172a_42%,_#020617_100%)] px-4 py-10">
     <div class="w-full max-w-md rounded-lg border border-white/10 bg-white p-6 shadow-2xl shadow-black/30 sm:p-8">
         <div class="mb-7">
@@ -86,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 });
             </script>
         <?php endif; ?>
-        <form method="post" autocomplete="off" class="space-y-4">
+        <form method="post" autocomplete="off" class="space-y-4" id="loginForm">
             <div>
                 <label for="username" class="mb-2 block text-sm font-bold text-slate-700">Username</label>
                 <input type="text" class="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-950 outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-500/10" id="username" name="username" required autofocus>
@@ -101,5 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 </div>
+<script>
+    document.getElementById('loginForm')?.addEventListener('submit', function() {
+        document.getElementById('adminLoader')?.classList.add('is-show');
+    });
+</script>
 </body>
 </html>
