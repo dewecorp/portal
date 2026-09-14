@@ -198,7 +198,8 @@ include __DIR__ . '/header.php';
         <?php if (empty($logs)): ?>
             <div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">Belum ada aktivitas tercatat hari ini.</div>
         <?php else: ?>
-            <div class="relative ml-4 border-l-2 border-slate-100 pl-8 space-y-8 py-2">
+            <div class="relative ml-2 pl-12 pr-2 space-y-8 py-2" style="max-height:420px;overflow-y:auto;">
+                <div class="absolute left-[19px] top-3 bottom-3 w-0.5 bg-slate-100 rounded" aria-hidden="true"></div>
                 <?php foreach ($logs as $log):
                     $action = $log['action'] ?? '';
                     $details = htmlspecialchars($log['details'] ?? '');
@@ -229,7 +230,7 @@ include __DIR__ . '/header.php';
                 ?>
                     <div class="relative">
                         <!-- Dot on timeline -->
-                        <span class="absolute -left-[45px] top-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-50 shadow-sm transition group-hover:scale-110">
+                        <span class="absolute -left-12 top-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-50 shadow-sm transition group-hover:scale-110">
                             <?php echo ui_icon($icon, 'w-3.5 h-3.5 ' . $iconColor); ?>
                         </span>
                         
