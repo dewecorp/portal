@@ -22,6 +22,13 @@ $menuName = $adminMenuNames[$currentAdminPage] ?? 'Admin';
 $siteName = $settings['site_name'] ?? 'Portal Berita';
 $pageTitle = $menuName . ' - ' . $siteName;
 
+// Jumlah komentar baru (pending) untuk badge notifikasi menu
+$pendingKomentarCount = 0;
+$rkPending = $conn->query("SELECT COUNT(*) AS jml FROM komentar WHERE status = 'pending'");
+if ($rkPending && ($rowPending = $rkPending->fetch_assoc())) {
+    $pendingKomentarCount = (int)($rowPending['jml'] ?? 0);
+}
+
 // Function to format date in Indonesian
 function formatHariTanggalIndonesia($tanggal) {
     $hari = [
@@ -649,8 +656,12 @@ function formatHariTanggalIndonesia($tanggal) {
             background: #fff;
             box-shadow: 0 20px 55px rgba(22, 48, 52, 0.18);
         }
-        .admin-user-menu.is-open .admin-user-dropdown {
+        .admin-user-menu.is-open .admin-user-dropdown,
+        .admin-user-menu:hover .admin-user-dropdown {
             display: block;
+        }
+        .admin-user-menu:hover .admin-user-caret {
+            transform: rotate(180deg);
         }
         .admin-user-dropdown a {
             display: flex;
@@ -806,23 +817,6 @@ function formatHariTanggalIndonesia($tanggal) {
             background: rgba(255,255,255,0.18) !important;
             color: #ffffff !important;
         }
-        .admin-user-dropdown .dropdown-action-icon {
-            display: inline-grid !important;
-            width: 2rem !important;
-            height: 2rem !important;
-            place-items: center !important;
-            border-radius: 0.65rem !important;
-            background: #dff8f3 !important;
-            color: #04786f !important;
-            font-size: 1rem !important;
-            font-weight: 900 !important;
-            line-height: 1 !important;
-            flex: 0 0 auto !important;
-        }
-        .admin-user-dropdown .is-danger .dropdown-action-icon {
-            background: #fee2e2 !important;
-            color: #dc2626 !important;
-        }
     </style>
 </head>
 <body>
@@ -858,11 +852,15 @@ function formatHariTanggalIndonesia($tanggal) {
                 </button>
                 <div class="admin-user-dropdown" role="menu">
                     <a href="settings" role="menuitem">
-                        <span class="dropdown-action-icon">U</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"></path>
+                        </svg>
                         <span>Update Sistem</span>
                     </a>
                     <a href="logout" class="is-danger" role="menuitem">
-                        <span class="dropdown-action-icon">L</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6l-8 6 8 6M8 12h10M6 4h4"></path>
+                        </svg>
                         <span>Logout</span>
                     </a>
                 </div>
@@ -935,6 +933,9 @@ function formatHariTanggalIndonesia($tanggal) {
                             </svg>
                         </span>
                         <span>Komentar</span>
+                        <?php if ($pendingKomentarCount > 0): ?>
+                            <span class="ms-auto rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-black text-white"><?php echo $pendingKomentarCount > 99 ? '99+' : $pendingKomentarCount; ?></span>
+                        <?php endif; ?>
                     </a>
                 </li>
                 <li class="nav-item mb-1">
