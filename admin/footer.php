@@ -7,9 +7,14 @@
         </main>
     </div>
 </div>
-<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/4.22.1/full-all/ckeditor.js"></script>
 <script>
     (function () {
+        try {
+            if (window.CKEDITOR && CKEDITOR.addCss) {
+                CKEDITOR.addCss('img.image-center{display:block;margin-left:auto;margin-right:auto;}img.image-left{float:left;margin:0 1rem 1rem 0;}img.image-right{float:right;margin:0 0 1rem 1rem;}figure.image{max-width:100%;}figure.image img{max-width:100%;height:auto;}figure.image.image-center{margin-left:auto;margin-right:auto;}figure.image.image-left{float:left;margin:0 1rem 1rem 0;}figure.image.image-right{float:right;margin:0 0 1rem 1rem;}figcaption{text-align:center;font-size:0.8rem;color:#64748b;padding:0.4rem 0;}');
+            }
+        } catch (e) {}
         var openButtons = document.querySelectorAll('[data-modal-open]');
         var closeButtons = document.querySelectorAll('[data-modal-close]');
 
@@ -36,8 +41,21 @@
                 ],
                 height: ckeditorHeight(textarea),
                 versionCheck: false,
-                removePlugins: 'elementspath',
-                extraAllowedContent: true
+                removePlugins: 'image,elementspath',
+                extraPlugins: 'image2',
+                extraAllowedContent: true,
+                image2_alignClasses: ['image-left', 'image-center', 'image-right'],
+                image2_captionedClass: 'image-captioned',
+                contentsCss: (function () {
+                    var css = [];
+                    try {
+                        var links = document.querySelectorAll('link[rel="stylesheet"]');
+                        for (var i = 0; i < links.length; i++) {
+                            if (links[i].href) css.push(links[i].href);
+                        }
+                    } catch (e) {}
+                    return css;
+                })()
             };
         }
 

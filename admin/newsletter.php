@@ -32,11 +32,7 @@ include __DIR__ . '/header.php';
 ?>
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">Newsletter (<?php echo count($list); ?>)</h1>
-    <a href="sections?area=footer" class="btn btn-outline-secondary btn-sm">Kelola Widget Footer</a>
 </div>
-<?php if (isset($_GET['success'])): ?>
-<script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1800, showConfirmButton: false }); });</script>
-<?php endif; ?>
 <?php if (isset($_GET['success'])): ?>
 <script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1800, showConfirmButton: false }); });</script>
 <?php endif; ?>

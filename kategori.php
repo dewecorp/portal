@@ -105,11 +105,56 @@ include __DIR__ . '/header.php';
         if ($gridStyle === 'list') $gridClass = 'flex flex-col gap-4';
         elseif ($gridStyle === 'masonry') $gridClass = 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6';
         elseif ($gridStyle === 'overlay') $gridClass = 'grid gap-6 sm:grid-cols-2 lg:grid-cols-3';
-        elseif ($gridStyle === 'magazine') $gridClass = 'grid gap-6 lg:grid-cols-2';
+        elseif ($gridStyle === 'magazine') $gridClass = 'grid gap-4 md:grid-cols-5 md:items-stretch';
         ?>
 
         <!-- News Grid (Style: <?php echo ucfirst($gridStyle); ?>) -->
         <div class="<?php echo $gridClass; ?>">
+            <?php if ($gridStyle === 'magazine'):
+                $magRows = array_slice($berita, 0, 5);
+                $first = $magRows[0] ?? null;
+                if ($first):
+            ?>
+                <div class="flex md:col-span-3" data-animate="<?php echo $animasi; ?>">
+                    <a href="<?php echo htmlspecialchars(berita_url($first)); ?>" class="group relative block w-full flex-1 min-h-[320px] overflow-hidden rounded-2xl shadow-sm card-hover md:min-h-0">
+                        <?php if (!empty($first['gambar'])): ?>
+                            <img loading="lazy" src="<?php echo htmlspecialchars(berita_image_url($first['gambar'])); ?>" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                        <?php else: ?>
+                            <div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>
+                        <?php endif; ?>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                        <div class="absolute bottom-0 p-4 sm:p-5">
+                            <span class="mb-2 inline-block rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold text-white"><?php echo htmlspecialchars($first['kategori_nama'] ?? $kategori['nama']); ?></span>
+                            <h3 class="text-base sm:text-lg font-black leading-snug text-white line-clamp-3 break-words"><?php echo htmlspecialchars($first['judul']); ?></h3>
+                            <div class="mt-1 text-xs text-white/80"><?php echo formatTanggalIndonesia($first['tanggal_publikasi']); ?></div>
+                        </div>
+                    </a>
+                </div>
+                <div class="grid grid-cols-2 content-between gap-3 md:col-span-2">
+                    <?php foreach (array_slice($magRows, 1, 4) as $sub):
+                        $subUrl = htmlspecialchars(berita_url($sub));
+                        $subImg = berita_image_url($sub['gambar'] ?? '');
+                    ?>
+                        <article class="group h-full overflow-hidden rounded-xl bg-white border border-slate-200 card-hover shadow-sm" data-animate="<?php echo $animasi; ?>">
+                            <a href="<?php echo $subUrl; ?>" class="block aspect-[16/9] overflow-hidden image-zoom">
+                                <?php if ($subImg !== ''): ?>
+                                    <img loading="lazy" src="<?php echo htmlspecialchars($subImg); ?>" alt="" class="h-full w-full object-cover">
+                                <?php else: ?>
+                                    <span class="block h-full w-full bg-gradient-to-br from-purple-500 to-blue-500"></span>
+                                <?php endif; ?>
+                            </a>
+                            <div class="p-3">
+                                <a href="<?php echo $subUrl; ?>" class="block">
+                                    <span class="inline-block text-[9px] font-bold uppercase tracking-wider text-purple-600 mb-1"><?php echo htmlspecialchars($sub['kategori_nama'] ?? $kategori['nama']); ?></span>
+                                    <h3 class="text-xs font-bold leading-snug text-slate-900 line-clamp-2 group-hover:text-purple-700"><?php echo htmlspecialchars($sub['judul']); ?></h3>
+                                </a>
+                                <div class="mt-1 text-[11px] text-slate-500"><?php echo formatTanggalIndonesia($sub['tanggal_publikasi']); ?></div>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            <?php else: ?>
             <?php foreach ($berita as $idx => $item): ?>
                 <?php $dly = ($idx % 3) ? ' data-animate-delay="' . ($idx % 3) . '"' : ''; ?>
                 <?php if ($gridStyle === 'overlay'): ?>
@@ -255,6 +300,7 @@ include __DIR__ . '/header.php';
                     </article>
                 <?php endif; ?>
             <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <?php if (($totalHal ?? 1) > 1): ?>

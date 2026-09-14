@@ -58,6 +58,27 @@ function berita_card_html(array $item, bool $showRingkasan = true): string
         . '</div></div></article>';
 }
 
+function berita_card_mini_html(array $item): string
+{
+    $url = htmlspecialchars(berita_url($item));
+    $judul = htmlspecialchars($item['judul'] ?? '');
+    $kat = htmlspecialchars($item['kategori_nama'] ?? 'Berita');
+    $tgl = isset($item['tanggal_publikasi']) ? formatTanggalIndonesia($item['tanggal_publikasi']) : '';
+    if (!empty($item['gambar'])) {
+        $img = htmlspecialchars(berita_image_url($item['gambar']));
+        $thumb = '<a href="' . $url . '" class="block aspect-[16/9] overflow-hidden image-zoom"><img loading="lazy" src="' . $img . '" alt="' . $judul . '" class="h-full w-full object-cover"></a>';
+    } else {
+        $thumb = '<a href="' . $url . '" class="block aspect-[16/9] bg-gradient-to-br from-purple-500 to-blue-500"></a>';
+    }
+    return '<article class="group h-full overflow-hidden rounded-xl bg-white border border-slate-200 card-hover shadow-sm">'
+        . $thumb
+        . '<div class="p-3"><a href="' . $url . '" class="block">'
+        . '<span class="inline-block text-[9px] font-bold uppercase tracking-wider text-purple-600 mb-1">' . $kat . '</span>'
+        . '<h3 class="text-xs font-bold leading-snug text-slate-900 group-hover:text-purple-700 transition line-clamp-2 mb-1">' . $judul . '</h3></a>'
+        . '<div class="text-[11px] text-slate-500">' . htmlspecialchars($tgl) . '</div>'
+        . '</div></article>';
+}
+
 function section_grid_style_list(): array
 {
     return [
@@ -115,7 +136,7 @@ function berita_sorotan_html(array $item): string
     $bg = $img !== ''
         ? '<img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">'
         : '<div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>';
-    return '<a href="' . $url . '" class="group relative block h-full min-h-[320px] w-full overflow-hidden rounded-2xl shadow-sm card-hover md:min-h-0">'
+    return '<a href="' . $url . '" class="group relative block w-full flex-1 min-h-[320px] overflow-hidden rounded-2xl shadow-sm card-hover md:min-h-0">'
         . $bg . '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>'
         . '<div class="absolute bottom-0 p-4 sm:p-5">'
         . '<span class="mb-2 inline-block rounded-full bg-purple-600 px-3 py-1 text-[11px] font-bold text-white">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span>'
@@ -148,14 +169,14 @@ function berita_list_html(array $item): string
     $ringkas = !empty($item['ringkasan']) ? '<p class="text-sm text-slate-600 line-clamp-2 mb-2">' . htmlspecialchars($item['ringkasan']) . '</p>' : '';
     $img = berita_image_url($item['gambar'] ?? '');
     $thumb = $img !== ''
-        ? '<a href="' . $url . '" class="block w-full md:w-36 xl:w-44 h-40 md:h-24 xl:h-28 shrink-0 overflow-hidden rounded-lg image-zoom"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="' . $judul . '" class="h-full w-full object-cover"></a>'
-        : '<div class="w-full md:w-36 xl:w-44 h-40 md:h-24 xl:h-28 shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500"></div>';
-    return '<article class="group flex flex-col md:flex-row gap-3 p-3 rounded-xl bg-white border border-slate-200 card-hover shadow-sm">'
+        ? '<a href="' . $url . '" class="block w-24 md:w-28 h-20 md:h-16 shrink-0 overflow-hidden rounded-lg image-zoom"><img loading="lazy" src="' . htmlspecialchars($img) . '" alt="' . $judul . '" class="h-full w-full object-cover"></a>'
+        : '<div class="w-24 md:w-28 h-20 md:h-16 shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500"></div>';
+    return '<article class="group flex flex-col md:flex-row gap-2 p-2 rounded-lg bg-white border border-slate-200 card-hover shadow-sm">'
         . $thumb
-        . '<div class="min-w-0 flex-1"><span class="inline-block text-[10px] font-bold uppercase tracking-wider text-purple-600 mb-1">' . $kat . '</span>'
-        . '<a href="' . $url . '"><h3 class="text-sm xl:text-base font-bold text-slate-900 group-hover:text-purple-700 line-clamp-2 mb-1 break-words">' . $judul . '</h3></a>'
+        . '<div class="min-w-0 flex-1"><span class="inline-block text-[9px] font-bold uppercase tracking-wider text-purple-600 mb-0.5">' . $kat . '</span>'
+        . '<a href="' . $url . '"><h3 class="text-xs xl:text-sm font-bold text-slate-900 group-hover:text-purple-700 line-clamp-2 mb-0.5 break-words">' . $judul . '</h3></a>'
         . $ringkas
-        . '<div class="flex flex-wrap items-center gap-2 text-xs text-slate-500"><span class="whitespace-nowrap">' . htmlspecialchars($tgl) . '</span>' . $penulis . '</div>'
+        . '<div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-500"><span class="whitespace-nowrap">' . htmlspecialchars($tgl) . '</span>' . $penulis . '</div>'
         . '</div></article>';
 }
 
@@ -227,19 +248,18 @@ function render_berita_grid(array $rows, string $style, int $kolom, string $anim
 {
     $style = section_normalize_style($style);
     if ($style === 'magazine') {
-        // 1 sorotan besar (2x2) + sisa kartu kecil mengisi grid — sama seperti preview admin.
-        echo '<div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">';
+        // 1 sorotan besar kiri + 4 kartu mini kanan agar selalu muat.
+        $rows = array_slice($rows, 0, 5);
+        echo '<div class="grid gap-4 md:grid-cols-5 md:items-stretch">';
         foreach ($rows as $i => $item) {
             if ($i === 0) {
-                $url = htmlspecialchars(berita_url($item));
-                $img = berita_image_url($item['gambar'] ?? '');
-                $big = '<a href="' . $url . '" class="group relative overflow-hidden rounded-2xl shadow-sm card-hover min-h-[320px] sm:min-h-[360px] block sm:col-span-2 xl:row-span-2 xl:h-full xl:min-h-[420px]">';
-                $big .= $img !== '' ? '<img loading="lazy" src="' . htmlspecialchars($img) . '" alt="" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">' : '<div class="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-600"></div>';
-                $big .= '<div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>';
-                $big .= '<div class="absolute bottom-0 p-6"><span class="inline-block badge-category mb-2">' . htmlspecialchars($item['kategori_nama'] ?? 'Berita') . '</span><h3 class="text-xl font-black text-white leading-snug break-words">' . htmlspecialchars($item['judul']) . '</h3></div></a>';
-                echo anim_item_html($big, $animAttr, $i);
-            } else {
-                echo anim_item_html(berita_card_html($item, $showRingkasan), $animAttr, $i);
+                echo anim_item_html('<div class="flex md:col-span-3">' . berita_sorotan_html($item) . '</div>', $animAttr, $i);
+                if (isset($rows[1])) {
+                    echo '<div class="grid grid-cols-2 content-between gap-3 md:col-span-2">';
+                    foreach (array_slice($rows, 1, 4) as $k => $sub) echo anim_item_html(berita_card_mini_html($sub), $animAttr, $k + 1);
+                    echo '</div>';
+                }
+                break;
             }
         }
         echo '</div>';

@@ -486,8 +486,17 @@ foreach ($navMenus as &$menu) {
             max-width: 100%;
             height: auto;
             border-radius: 0.75rem;
-            margin: 1rem 0;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
+        .news-content img.image-center, .news-content figure.image-center { display: block; margin-left: auto; margin-right: auto; }
+        .news-content p.image-center, .news-content div.image-center { text-align: center; }
+        .news-content p.image-center img, .news-content div.image-center img { display: inline-block; margin-left: auto; margin-right: auto; }
+        .news-content img.image-left, .news-content figure.image-left { float: left; margin: 0 1rem 1rem 0; }
+        .news-content img.image-right, .news-content figure.image-right { float: right; margin: 0 0 1rem 1rem; }
+        .news-content figure.image { max-width: 100%; }
+        .news-content figure.image img { margin-top: 0; margin-bottom: 0; }
+        .news-content figcaption { text-align: center; font-size: 0.8rem; color: #64748b; padding: 0.4rem 0; }
         .news-content a {
             color: var(--pb-accent);
             text-decoration: underline;
