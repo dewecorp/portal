@@ -599,7 +599,7 @@ function section_default_cfg(string $tipe): array
         case 'populer': return ['jumlah' => 5, 'kolom' => 4, 'style_grid' => 'overlay'];
         case 'countdown': return ['target_tanggal' => '', 'isi' => ''];
         case 'image': return ['gambar' => '', 'alt' => '', 'link' => '', 'gaya_gambar' => 'statis'];
-        case 'video': return ['video_url' => '', 'poster' => ''];
+        case 'video': return ['daftar_video' => [], 'posisi_list' => 'kanan'];
         case 'audio': return ['audio_url' => ''];
         case 'cta': return ['deskripsi' => '', 'cta_teks' => 'Lihat Selengkapnya', 'cta_link' => 'semua-kategori'];
         case 'berita_terbaru': return ['jumlah' => 5, 'kategori_id' => 0, 'tampil_gambar' => 1];

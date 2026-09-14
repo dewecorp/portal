@@ -11,6 +11,19 @@ function api_out(bool $ok, array $extra = []): void
     exit;
 }
 
+function api_youtube_title(string $url): string
+{
+    $url = trim($url);
+    if ($url === '') return '';
+    $oembed = 'https://www.youtube.com/oembed?url=' . rawurlencode($url) . '&format=json';
+    $ctx = stream_context_create(['http' => ['timeout' => 8, 'header' => "User-Agent: PortalBerita/1.0\r\n"]]);
+    $json = @file_get_contents($oembed, false, $ctx);
+    if ($json === false) return '';
+    $data = json_decode($json, true);
+    if (!is_array($data) || empty($data['title'])) return '';
+    return trim((string)$data['title']);
+}
+
 function api_cfg_clean(string $tipe, $cfg): array
 {
     $base = section_default_cfg($tipe);
@@ -36,6 +49,48 @@ function api_cfg_clean(string $tipe, $cfg): array
     if (isset($out['galeri']) && !is_array($out['galeri'])) {
         $d = json_decode((string)$out['galeri'], true);
         $out['galeri'] = is_array($d) ? array_values($d) : [];
+    }
+    if (isset($out['daftar_video'])) {
+        $d = $out['daftar_video'];
+        if (!is_array($d)) {
+            $tmp = json_decode((string)$d, true);
+            $d = is_array($tmp) ? $tmp : [];
+        }
+        $norm = [];
+        foreach ($d as $it) {
+            if (!is_array($it)) {
+                $ur = trim((string)$it);
+                if ($ur === '') continue;
+                $norm[] = ['judul' => '', 'url' => $ur, 'nama_file' => ''];
+            } else {
+                $lb = trim((string)($it['judul'] ?? ''));
+                $ur = trim((string)($it['url'] ?? ''));
+                $nf = trim((string)($it['nama_file'] ?? ''));
+                if ($ur === '') continue;
+                $norm[] = ['judul' => $lb, 'url' => $ur, 'nama_file' => $nf];
+            }
+            if (count($norm) >= 10) break;
+        }
+        // Migrasi video lama: video_url utama masuk daftar bila daftar kosong.
+        $legacy = trim((string)($out['video_url'] ?? ''));
+        if ($legacy !== '') {
+            $found = false;
+            foreach ($norm as $it) {
+                if (($it['url'] ?? '') === $legacy) { $found = true; break; }
+            }
+            if (!$found) array_unshift($norm, ['judul' => '', 'url' => $legacy, 'nama_file' => '']);
+        }
+        // Isi judul kosong dari sumber asli (oEmbed YouTube).
+        foreach ($norm as $k => $it) {
+            if (($it['judul'] ?? '') === '' && ($it['url'] ?? '') !== '') {
+                $ytTitle = api_youtube_title($it['url']);
+                if ($ytTitle !== '') $norm[$k]['judul'] = $ytTitle;
+            }
+        }
+        $out['daftar_video'] = $norm;
+    }
+    if (isset($out['posisi_list']) && !in_array($out['posisi_list'], ['kiri', 'kanan'], true)) {
+        $out['posisi_list'] = 'kanan';
     }
     if (isset($out['tautan'])) {
         if (is_array($out['tautan'])) {
@@ -81,6 +136,11 @@ if (!is_array($json)) $json = [];
 $req = array_merge($_POST, $json);
 
 try {
+    if ($aksi === 'judul_youtube') {
+        $url = trim((string)($req['url'] ?? ''));
+        $title = api_youtube_title($url);
+        api_out($title !== '', $title !== '' ? ['judul' => $title] : ['error' => 'Judul tidak ditemukan.']);
+    }
     if ($aksi === 'list') {
         $area = api_area($req['area'] ?? 'home');
         $stmt = $conn->prepare("SELECT * FROM sections WHERE area = ? ORDER BY urutan ASC, id ASC");
@@ -211,6 +271,21 @@ try {
         $ok = $stmt->execute();
         $stmt->close();
         api_out((bool)$ok);
+    }
+
+    if ($aksi === 'upload_video') {
+        if (empty($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) api_out(false, ['error' => 'Upload gagal.']);
+        $allowed = ['mp4' => 'video/mp4', 'webm' => 'video/webm', 'ogg' => 'video/ogg', 'mov' => 'video/quicktime', 'm4v' => 'video/x-m4v'];
+        $name = (string)$_FILES['file']['name'];
+        $tmp = (string)$_FILES['file']['tmp_name'];
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (!isset($allowed[$ext])) api_out(false, ['error' => 'Format video tidak didukung (mp4/webm/ogg/mov).']);
+        if ($_FILES['file']['size'] > 100 * 1024 * 1024) api_out(false, ['error' => 'Maksimal 100MB.']);
+        $dir = __DIR__ . '/../uploads';
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+        $safe = uniqid('vid_') . '.' . $ext;
+        if (!move_uploaded_file($tmp, $dir . '/' . $safe)) api_out(false, ['error' => 'Gagal menyimpan file.']);
+        api_out(true, ['path' => 'uploads/' . $safe, 'url' => '../uploads/' . $safe, 'name' => $name]);
     }
 
     if ($aksi === 'upload') {

@@ -651,15 +651,56 @@ function render_home_section(mysqli $conn, array $sec): void
     }
 
     if ($tipe === 'video') {
-        $url = trim((string)section_opt($cfg, 'video_url', ''));
-        if ($url === '') return;
+        $list = section_opt($cfg, 'daftar_video', []);
+        if (!is_array($list)) {
+            $tmp = json_decode((string)$list, true);
+            $list = is_array($tmp) ? $tmp : [];
+        }
+        $items = [];
+        foreach ($list as $it) {
+            if (!is_array($it)) {
+                $u = trim((string)$it);
+                if ($u !== '') $items[] = ['judul' => '', 'url' => $u];
+            } else {
+                $u = trim((string)($it['url'] ?? ''));
+                if ($u === '') continue;
+                $items[] = ['judul' => trim((string)($it['judul'] ?? '')), 'url' => $u];
+            }
+            if (count($items) >= 10) break;
+        }
+        if (empty($items)) return;
+        $url = $items[0]['url'];
+        $posisi = section_opt($cfg, 'posisi_list', 'kanan') === 'kiri' ? 'kiri' : 'kanan';
+        $hasList = !empty($items);
         echo '<section class="mb-12"' . $animAttr . '>';
         if ($judul !== '') echo section_header_html($judul);
+        echo '<div class="' . ($hasList ? 'grid gap-4 lg:grid-cols-3' : '') . '">';
+        $playerCls = $hasList ? ($posisi === 'kiri' ? 'lg:col-span-2 lg:order-2' : 'lg:col-span-2') : '';
         $yt = section_youtube_id($url);
-        echo '<div class="overflow-hidden rounded-2xl shadow-sm bg-black aspect-video">';
+        echo '<div class="' . $playerCls . '"><div class="overflow-hidden rounded-2xl shadow-sm bg-black aspect-video" data-video-player>';
         if ($yt !== '') echo '<iframe src="https://www.youtube.com/embed/' . $yt . '" class="w-full h-full" style="min-height:360px;" allowfullscreen loading="lazy" title="Video"></iframe>';
-        else echo '<video src="' . htmlspecialchars($url) . '" controls class="w-full h-full"' . (trim((string)section_opt($cfg, 'poster', '')) !== '' ? ' poster="' . htmlspecialchars(berita_image_url((string)section_opt($cfg, 'poster', ''))) . '"' : '') . '></video>';
+        else echo '<video src="' . htmlspecialchars($url) . '" controls class="w-full h-full"></video>';
+        echo '</div></div>';
+        if ($hasList) {
+            $sideCls = $posisi === 'kiri' ? 'lg:order-1' : '';
+            echo '<div class="' . $sideCls . '"><div class="flex flex-col gap-3 max-h-[420px] overflow-y-auto pr-1" data-video-list>';
+            foreach ($items as $k => $it) {
+                $iu = htmlspecialchars($it['url']);
+                $jt = $it['judul'] !== '' ? htmlspecialchars($it['judul']) : 'Video ' . ($k + 1);
+                $iyt = section_youtube_id($it['url']);
+                $thumb = $iyt !== ''
+                    ? '<span class="block h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-black"><img loading="lazy" src="https://i.ytimg.com/vi/' . $iyt . '/hqdefault.jpg" alt="" class="h-full w-full object-cover"></span>'
+                    : '<span class="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9l5 3-5 3z"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>';
+                $active = $it['url'] === $url ? ' border-purple-500 bg-purple-50' : ' border-slate-200 bg-white';
+                echo '<button type="button" data-video-url="' . $iu . '" class="group flex items-center gap-3 rounded-xl border p-2 text-left shadow-sm transition hover:border-purple-400' . $active . '">'
+                    . $thumb
+                    . '<span class="min-w-0"><span class="block truncate text-xs font-bold text-slate-900">' . $jt . '</span>'
+                    . '<span class="mt-0.5 block truncate text-[11px] text-slate-500">' . $iu . '</span></span></button>';
+            }
+            echo '</div></div>';
+        }
         echo '</div></section>';
+        echo '<script>(function(){var s=document.currentScript&&document.currentScript.previousElementSibling;if(!s)return;var p=s.querySelector("[data-video-player]");var l=s.querySelector("[data-video-list]");if(!p||!l)return;l.addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-video-url]"):null;if(!b)return;var u=b.getAttribute("data-video-url");if(!u)return;var m=u.match(/(?:youtube\\.com\\/(?:watch\\?v=|embed\\/|shorts\\/)|youtu\\.be\\/)([A-Za-z0-9_-]{6,})/);if(m&&m[1]){p.innerHTML="<iframe src=\\"https://www.youtube.com/embed/"+m[1]+"?autoplay=1\\" class=\\"w-full h-full\\" style=\\"min-height:360px;\\" allowfullscreen loading=\\"lazy\\" title=\\"Video\\"></iframe>";}else{p.innerHTML="<video src=\\""+u.replace(/"/g,"")+ "\\" controls autoplay class=\\"w-full h-full\\"></video>";}l.querySelectorAll("[data-video-url]").forEach(function(x){x.classList.remove("border-purple-500","bg-purple-50");x.classList.add("border-slate-200","bg-white");});b.classList.add("border-purple-500","bg-purple-50");b.classList.remove("border-slate-200","bg-white");});})();</script>';
         return;
     }
 
@@ -1101,14 +1142,50 @@ function render_sidebar_widget(mysqli $conn, array $settings, array $sec): void
             return;
         }
         if ($tipe === 'video') {
-            $url = trim((string)section_opt($cfg, 'video_url', ''));
-            if ($url === '') return;
+            $list = section_opt($cfg, 'daftar_video', []);
+            if (!is_array($list)) {
+                $tmp = json_decode((string)$list, true);
+                $list = is_array($tmp) ? $tmp : [];
+            }
+            $items = [];
+            foreach ($list as $it) {
+                if (!is_array($it)) {
+                    $u = trim((string)$it);
+                    if ($u !== '') $items[] = ['judul' => '', 'url' => $u];
+                } else {
+                    $u = trim((string)($it['url'] ?? ''));
+                    if ($u === '') continue;
+                    $items[] = ['judul' => trim((string)($it['judul'] ?? '')), 'url' => $u];
+                }
+                if (count($items) >= 10) break;
+            }
+            if (empty($items)) return;
+            $url = $items[0]['url'];
             echo sidebar_card_open($sec, $judul);
             $yt = section_youtube_id($url);
-            echo '<div class="aspect-video overflow-hidden rounded-xl bg-black">';
+            echo '<div class="aspect-video overflow-hidden rounded-xl bg-black" data-video-player>';
             if ($yt !== '') echo '<iframe src="https://www.youtube.com/embed/' . $yt . '" class="h-full w-full" loading="lazy" allowfullscreen title="Video"></iframe>';
             else echo '<video src="' . htmlspecialchars($url) . '" controls class="h-full w-full"></video>';
-            echo '</div></div></div>';
+            echo '</div>';
+            if (!empty($items)) {
+                echo '<div class="mt-3 flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1" data-video-list>';
+                foreach ($items as $k => $it) {
+                    $iu = htmlspecialchars($it['url']);
+                    $jt = $it['judul'] !== '' ? htmlspecialchars($it['judul']) : 'Video ' . ($k + 1);
+                    $iyt = section_youtube_id($it['url']);
+                    $thumb = $iyt !== ''
+                        ? '<span class="block h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-black"><img loading="lazy" src="https://i.ytimg.com/vi/' . $iyt . '/hqdefault.jpg" alt="" class="h-full w-full object-cover"></span>'
+                        : '<span class="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9l5 3-5 3z"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>';
+                    $active = $it['url'] === $url ? ' border-purple-500 bg-purple-50' : ' border-slate-200 bg-white';
+                    echo '<button type="button" data-video-url="' . $iu . '" class="group flex items-center gap-2 rounded-xl border p-2 text-left shadow-sm transition hover:border-purple-400' . $active . '">'
+                        . $thumb
+                        . '<span class="min-w-0"><span class="block truncate text-xs font-bold text-slate-900">' . $jt . '</span>'
+                        . '<span class="mt-0.5 block truncate text-[11px] text-slate-500">' . $iu . '</span></span></button>';
+                }
+                echo '</div>';
+                echo '<script>(function(){var s=document.currentScript&&document.currentScript.previousElementSibling;if(!s)return;var p=s.querySelector("[data-video-player]");var l=s.querySelector("[data-video-list]");if(!p||!l)return;l.addEventListener("click",function(e){var b=e.target.closest?e.target.closest("[data-video-url]"):null;if(!b)return;var u=b.getAttribute("data-video-url");if(!u)return;var m=u.match(/(?:youtube\\.com\\/(?:watch\\?v=|embed\\/|shorts\\/)|youtu\\.be\\/)([A-Za-z0-9_-]{6,})/);if(m&&m[1]){p.innerHTML="<iframe src=\\"https://www.youtube.com/embed/"+m[1]+"?autoplay=1\\" class=\\"h-full w-full\\" loading=\\"lazy\\" allowfullscreen title=\\"Video\\"></iframe>";}else{p.innerHTML="<video src=\\""+u.replace(/"/g,"")+ "\\" controls autoplay class=\\"h-full w-full\\"></video>";}l.querySelectorAll("[data-video-url]").forEach(function(x){x.classList.remove("border-purple-500","bg-purple-50");x.classList.add("border-slate-200","bg-white");});b.classList.add("border-purple-500","bg-purple-50");b.classList.remove("border-slate-200","bg-white");});})();</script>';
+            }
+            echo '</div></div>';
             return;
         }
         $isi = trim((string)section_opt($cfg, 'isi', ''));
@@ -1295,10 +1372,21 @@ function render_footer_mini_widget(mysqli $conn, array $sec, array $cfg): void
     $tipe = (string)($sec['tipe'] ?? '');
     if ($tipe === 'image' && trim((string)($cfg['gambar'] ?? '')) !== '') {
         echo '<img loading="lazy" src="' . htmlspecialchars(berita_image_url((string)$cfg['gambar'])) . '" alt="" class="w-full rounded-xl object-cover">';
-    } elseif ($tipe === 'video' && trim((string)($cfg['video_url'] ?? '')) !== '') {
-        $yt = section_youtube_id((string)$cfg['video_url']);
+    } elseif ($tipe === 'video') {
+        $vlist = $cfg['daftar_video'] ?? [];
+        if (!is_array($vlist)) {
+            $tmp = json_decode((string)$vlist, true);
+            $vlist = is_array($tmp) ? $tmp : [];
+        }
+        $vurl = '';
+        foreach ($vlist as $vit) {
+            $vu = is_array($vit) ? trim((string)($vit['url'] ?? '')) : trim((string)$vit);
+            if ($vu !== '') { $vurl = $vu; break; }
+        }
+        if ($vurl === '') return;
+        $yt = section_youtube_id($vurl);
         if ($yt !== '') echo '<div class="aspect-video overflow-hidden rounded-xl bg-black"><iframe src="https://www.youtube.com/embed/' . $yt . '" class="w-full h-full" loading="lazy" allowfullscreen></iframe></div>';
-        else echo '<audio src="' . htmlspecialchars((string)$cfg['video_url']) . '" controls class="w-full"></audio>';
+        else echo '<video src="' . htmlspecialchars($vurl) . '" controls class="w-full"></video>';
     } elseif ($tipe === 'audio' && trim((string)($cfg['audio_url'] ?? '')) !== '') {
         echo '<audio src="' . htmlspecialchars((string)$cfg['audio_url']) . '" controls class="w-full"></audio>';
     } elseif ($tipe === 'galeri') {

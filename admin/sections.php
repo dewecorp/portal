@@ -142,7 +142,27 @@ include __DIR__ . '/header.php';
 .sb-savebar-float { position:sticky; bottom:12px; z-index:20; background:rgba(255,255,255,.92); backdrop-filter:blur(10px); border:1.5px solid #a7f3d0; border-radius:14px; padding:10px; box-shadow:0 14px 32px rgba(16,185,129,.22); }
 .sb-links-list { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
 .sb-link-row { display:grid; grid-template-columns:1fr 1fr 30px; gap:6px; align-items:center; }
-.sb-link-row input { border:1.5px solid #e2e8f0; border-radius:10px; padding:8px 10px; font-size:12.5px; outline:none; width:100%; }
+.sb-link-row[data-vrow] { grid-template-columns:1fr; border:1.5px solid #e2e8f0; border-radius:14px; padding:10px; background:#fff; }
+.sb-vcard { position:relative; border:1.5px dashed #cbd5e1; border-radius:12px; padding:10px 48px 44px 54px; background:#fff; min-width:0; overflow:hidden; }
+.sb-vcard-num { position:absolute; left:10px; top:12px; min-width:22px; text-align:center; font-weight:900; font-size:12px; color:#64748b; }
+.sb-vplay { position:absolute; left:10px; top:34px; width:34px; height:34px; border-radius:10px; border:0; background:#0f172a; color:#fff; display:grid; place-items:center; cursor:pointer; }
+.sb-vplay svg, .sb-vplay path { width:14px; height:14px; pointer-events:none; }
+.sb-vedit { position:absolute; right:10px; top:10px; width:30px; height:30px; border-radius:9px; border:1.5px solid #e2e8f0; background:#fff; color:#475569; display:grid; place-items:center; cursor:pointer; }
+.sb-vedit svg, .sb-vedit path { width:14px; height:14px; pointer-events:none; }
+.sb-vdel { position:absolute; right:10px; bottom:10px; width:30px; height:30px; border-radius:9px; border:1.5px solid #fecaca; background:#fff; color:#dc2626; display:grid; place-items:center; cursor:pointer; }
+.sb-vdel svg, .sb-vdel path { width:14px; height:14px; pointer-events:none; }
+.sb-vtitle { font-size:13px; font-weight:800; color:#0f172a; margin:0 0 8px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+.sb-vfile-row { display:flex; align-items:center; gap:8px; }
+.sb-vfile-btn { flex:0 0 auto; border:1.5px solid #94a3b8; border-radius:8px; background:#fff; font-size:12px; font-weight:700; color:#334155; padding:7px 12px; cursor:pointer; }
+.sb-vfile-name { flex:1; min-width:0; font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-vurl { display:grid; grid-template-columns:1fr auto; gap:6px; margin-top:8px; }
+.sb-vyt { border:1.5px dashed #6ee7b7; border-radius:8px; background:#ecfdf5; color:#047857; font-weight:800; font-size:11.5px; padding:7px 10px; cursor:pointer; white-space:nowrap; }
+.sb-vsave { border:1.5px dashed #6ee7b7; border-radius:8px; background:#ecfdf5; color:#047857; font-weight:800; font-size:11.5px; padding:7px 10px; cursor:pointer; white-space:nowrap; }
+.sb-vmain { border:1.5px dashed #fbbf24; border-radius:8px; background:#fffbeb; color:#92400e; font-weight:800; font-size:11.5px; padding:7px 10px; cursor:pointer; white-space:nowrap; }
+.sb-link-row input { border:1.5px solid #e2e8f0; border-radius:10px; padding:8px 10px; font-size:12.5px; outline:none; width:100%; max-width:100%; min-width:0; box-sizing:border-box; }
+.sb-vcard input { min-width:0; }
+.sb-vurl { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; margin-top:8px; }
+.sb-link-row[data-vrow] { grid-template-columns:minmax(0,1fr); border:1.5px solid #e2e8f0; border-radius:14px; padding:10px; background:#fff; min-width:0; overflow:hidden; }
 .sb-link-row input:focus { border-color:#10b981; }
 .sb-link-del { width:30px; height:34px; border-radius:9px; border:1.5px solid #fecaca; background:#fff; color:#dc2626; cursor:pointer; font-size:14px; }
 .sb-link-add { width:100%; border:1.5px dashed #6ee7b7; border-radius:10px; background:#ecfdf5; color:#047857; font-weight:800; font-size:12.5px; padding:9px; cursor:pointer; }
@@ -637,7 +657,7 @@ include __DIR__ . '/header.php';
         populer: [['jumlah', 'slider', 'Jumlah berita', 1, 10], ['kolom', 'segment_kolom', 'Kolom']],
         countdown: [['target_tanggal', 'datetime', 'Target (tanggal & jam)'], ['isi', 'textarea', 'Deskripsi']],
         image: [['gambar', 'image', 'Gambar'], ['alt', 'text', 'Alt text'], ['link', 'text', 'Link (opsional)']],
-        video: [['video_url', 'text', 'URL Video / YouTube'], ['poster', 'image', 'Poster (opsional)']],
+        video: [['daftar_video', 'video_list', 'Daftar video (maks 10)'], ['posisi_list', 'posisi_list', 'Posisi daftar']],
         audio: [['audio_url', 'text', 'URL Audio (mp3)']],
         html: [['html', 'code', 'Kode HTML']],
         cta: [['deskripsi', 'textarea', 'Deskripsi'], ['cta_teks', 'text', 'Teks tombol'], ['cta_link', 'text', 'Link tombol']],
@@ -771,6 +791,36 @@ include __DIR__ . '/header.php';
             h += '</div><button type="button" class="sb-link-add" data-link-add="1"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px;">' + (UI.plus || '+') + '</span>Tambah tautan</button>';
             h += '<input type="hidden" data-k="' + key + '" value=\'' + esc(JSON.stringify(list)) + '\'>';
             h += '</div>';
+            return h;
+        }
+        else if (type === 'video_list') {
+            var vlist = Array.isArray(val) ? val.slice() : [];
+            if (!vlist.length) vlist = [{ judul: '', url: '', nama_file: '' }];
+            h += '<div class="sb-field" style="margin:0;border:1.5px solid #e2e8f0;border-radius:12px;padding:10px;"><span class="sb-note">Daftar Video (' + vlist.length + ') — upload/tautan, edit judul, hapus per baris</span>';
+            h += '<div class="sb-links-list" data-videos="' + key + '">';
+            vlist.forEach(function(it, i) {
+                h += '<div class="sb-link-row" style="grid-template-columns:1fr;border:0;padding:0;background:none;" data-vrow="' + i + '">'
+                    + '<div class="sb-vcard">'
+                    + '<span class="sb-vcard-num">' + (i + 1) + '</span>'
+                    + '<button type="button" class="sb-vplay" data-vmain="' + i + '" title="Jadikan video utama"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>'
+                    + '<p class="sb-vtitle">' + esc(it.judul || ('Video ' + (i + 1))) + '</p>'
+                    + '<div class="sb-vfile-row"><button type="button" class="sb-vfile-btn" data-vfile="' + i + '">Choose File</button><span class="sb-vfile-name">' + esc(it.nama_file || 'No file chosen') + '</span></div>'
+                    + '<input type="file" accept="video/*,.mp4,.webm,.ogg" data-vupload="' + i + '" style="display:none;">'
+                    + '<input type="text" data-vjudul="' + i + '" value="' + esc(it.judul || '') + '" placeholder="Judul video" style="margin-top:6px;">'
+                    + '<div class="sb-vurl"><input type="text" data-vurl="' + i + '" value="' + esc(it.url || '') + '" placeholder="https://...">'
+                    + '<button type="button" class="sb-vyt" data-vyt="' + i + '" title="Ambil judul dari YouTube">YT</button></div>'
+                    + '<button type="button" class="sb-vdel" data-vdel="' + i + '" title="Hapus">' + (UI.trash || '×') + '</button>'
+                    + '</div></div>';
+            });
+            h += '</div><button type="button" class="sb-link-add" data-vadd="1"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px;">' + (UI.plus || '+') + '</span>Tambah Video</button>';
+            h += '<input type="hidden" data-k="' + key + '" value=\'' + esc(JSON.stringify(vlist.map(function(x){ return { judul: x.judul || "", url: x.url || "", nama_file: x.nama_file || "" }; }))) + '\'>';
+            h += '</div>';
+            return h;
+        }
+        else if (type === 'posisi_list') {
+            h += '<div class="sb-segwrap" data-segwrap="' + key + '">';
+            [['kiri', 'Kiri'], ['kanan', 'Kanan']].forEach(function(o) { h += segBtn(val || 'kanan', o, key); });
+            h += '</div><input type="hidden" data-k="' + key + '" value="' + esc(val || 'kanan') + '">';
             return h;
         }
         h += '</div>';
@@ -1099,6 +1149,129 @@ include __DIR__ . '/header.php';
                     arr.splice(i, 1);
                     if (c) { c.cfg[key] = arr; pendingState(c).cfg[key] = arr; }
                     renderInspector();
+                });
+            });
+        });
+        // Editor daftar video: pola sama seperti editor tautan (langsung pasang tiap render).
+        document.querySelectorAll('#sbInspBody [data-videos]').forEach(function(box) {
+            var key = box.dataset.videos;
+            var wrap = box.closest('.sb-field') || box.parentNode;
+            var hid = wrap.querySelector('input[data-k="' + key + '"]') || document.querySelector('#sbInspBody input[data-k="' + key + '"]');
+            var addBtn = wrap.querySelector('[data-vadd]') || document.querySelector('#sbInspBody [data-vadd]');
+            function readRows() {
+                var arr = [];
+                box.querySelectorAll('[data-vrow]').forEach(function(row) {
+                    var j = row.querySelector('[data-vjudul]');
+                    var u = row.querySelector('[data-vurl]');
+                    var jt = j ? j.value.trim() : '', ut = u ? u.value.trim() : '';
+                    var nm = row.querySelector('.sb-vfile-name');
+                    var nmt = nm ? nm.textContent.trim() : '';
+                    if (nmt === 'No file chosen') nmt = '';
+                    if (jt !== '' || ut !== '') arr.push({ judul: jt, url: ut, nama_file: nmt });
+                });
+                return arr;
+            }
+            function writeState(arr) {
+                var c = cur();
+                if (!c) return;
+                c.cfg = c.cfg || {};
+                c.cfg[key] = arr.slice();
+                pendingState(c).cfg[key] = arr.map(function(x) { return { judul: x.judul || '', url: x.url || '', nama_file: x.nama_file || '' }; });
+                if (hid) hid.value = JSON.stringify(pendingState(c).cfg[key]);
+            }
+            box.querySelectorAll('[data-vjudul],[data-vurl]').forEach(function(inp) {
+                inp.addEventListener('input', function() {
+                    writeState(readRows());
+                    var row = inp.closest('[data-vrow]');
+                    if (inp.hasAttribute('data-vjudul') && row) {
+                        var t = row.querySelector('.sb-vtitle');
+                        if (t) t.textContent = inp.value.trim() || 'Video';
+                    }
+                });
+            });
+            if (addBtn) addBtn.addEventListener('click', function() {
+                var arr = readRows();
+                if (arr.length >= 10) { toast('Maksimal 10 video.', false); return; }
+                var c = cur();
+                var curArr = (c && c.cfg && Array.isArray(c.cfg[key])) ? c.cfg[key].slice() : arr;
+                curArr.push({ judul: '', url: '', nama_file: '' });
+                writeState(curArr);
+                renderInspector();
+            });
+            box.querySelectorAll('[data-vdel]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var i = parseInt(btn.getAttribute('data-vdel'), 10);
+                    var arr = readRows();
+                    arr.splice(i, 1);
+                    writeState(arr);
+                    renderInspector();
+                });
+            });
+            box.querySelectorAll('[data-vyt]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var i = parseInt(btn.getAttribute('data-vyt'), 10);
+                    var row = box.querySelector('[data-vrow="' + i + '"]');
+                    var u = row ? row.querySelector('[data-vurl]') : null;
+                    var url = u ? u.value.trim() : '';
+                    if (url === '') { toast('Isi URL video dulu.', false); return; }
+                    btn.disabled = true;
+                    api('judul_youtube', { url: url }).then(function(d) {
+                        btn.disabled = false;
+                        if (d && d.success && d.judul) {
+                            var j = row.querySelector('[data-vjudul]');
+                            if (j) j.value = d.judul;
+                            var t = row.querySelector('.sb-vtitle');
+                            if (t) t.textContent = d.judul;
+                            writeState(readRows());
+                            toast('Judul diambil dari YouTube.');
+                        } else {
+                            toast((d && d.error) || 'Judul tidak ditemukan.', false);
+                        }
+                    }).catch(function() { btn.disabled = false; toast('Gagal mengambil judul.', false); });
+                });
+            });
+            box.querySelectorAll('[data-vmain]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var i = parseInt(btn.getAttribute('data-vmain'), 10);
+                    var arr = readRows();
+                    var it = arr[i];
+                    if (!it || !it.url) { toast('Isi URL video dulu.', false); return; }
+                    var c = cur();
+                    if (c) { c.cfg = c.cfg || {}; c.cfg.video_url = it.url; pendingState(c).cfg.video_url = it.url; }
+                    toast('Video utama diperbarui. Klik Simpan Perubahan.');
+                });
+            });
+            box.querySelectorAll('[data-vfile]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var i = parseInt(btn.getAttribute('data-vfile'), 10);
+                    var fi = box.querySelector('[data-vupload="' + i + '"]');
+                    if (fi) fi.click();
+                });
+            });
+            box.querySelectorAll('[data-vupload]').forEach(function(fi) {
+                fi.addEventListener('change', function() {
+                    var i = parseInt(fi.getAttribute('data-vupload'), 10);
+                    var f = fi.files && fi.files[0];
+                    if (!f) return;
+                    var c = cur();
+                    if (!c) return;
+                    toast('Mengunggah video...');
+                    api('upload_video', {}, f).then(function(d) {
+                        var arr = readRows();
+                        if (d && d.success && d.path) {
+                            while (arr.length <= i) arr.push({ judul: '', url: '', nama_file: '' });
+                            arr[i].url = d.path;
+                            arr[i].nama_file = f.name;
+                            if (!arr[i].judul) arr[i].judul = f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+                            c.cfg = c.cfg || {}; c.cfg[key] = arr.slice();
+                            pendingState(c).cfg[key] = arr.map(function(x) { return { judul: x.judul || '', url: x.url || '', nama_file: x.nama_file || '' }; });
+                            if (hid) hid.value = JSON.stringify(pendingState(c).cfg[key]);
+                            renderInspector();
+                            toast('Video terunggah — klik Simpan Perubahan.');
+                        } else {
+                            toast((d && d.error) || 'Upload gagal.', false);
+                        }
+                    }).catch(function() { toast('Gagal mengunggah.', false); });
                 });
             });
         });
