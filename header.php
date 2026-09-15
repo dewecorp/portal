@@ -317,8 +317,8 @@ foreach ($navMenus as &$menu) {
             top: 100%;
             left: 0;
             transform: none;
-            min-width: 600px;
-            max-width: min(1120px, calc(100vw - 2rem));
+            min-width: 0;
+            max-width: min(860px, calc(100vw - 2rem));
             width: max-content;
             box-sizing: border-box;
             background: linear-gradient(135deg, rgba(255,255,255,0.88), rgba(248,250,252,0.72));
@@ -326,8 +326,8 @@ foreach ($navMenus as &$menu) {
             box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18), inset 0 1px 0 rgba(255,255,255,0.7);
             backdrop-filter: blur(22px) saturate(1.25);
             -webkit-backdrop-filter: blur(22px) saturate(1.25);
-            border-radius: 1.35rem;
-            padding: 1.5rem 2rem;
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
             z-index: 9999;
             display: block;
             opacity: 0;
@@ -364,16 +364,31 @@ foreach ($navMenus as &$menu) {
             color: var(--pb-accent);
         }
         .mega-news-grid {
+            display: flex;
+            justify-content: start;
+            align-items: stretch;
+            gap: 0.55rem;
+            max-width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.15rem;
+            scrollbar-width: thin;
+        }
+        .mega-news-grid .mega-news-card {
+            flex: 0 0 148px;
+            width: 148px;
+        }
+        .mega-submenu-grid {
             display: grid;
-            grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: 1rem;
+            gap: 1.5rem;
+            grid-template-columns: repeat(var(--submenu-count, 1), minmax(150px, 1fr));
         }
         .mega-news-card {
             display: block;
-            border-radius: 1rem;
+            border-radius: 0.6rem;
             border: 1px solid rgba(255,255,255,0.65);
             background: rgba(255,255,255,0.54);
-            padding: 0.65rem;
+            padding: 0;
+            font-size: 0.8rem;
             text-decoration: none;
             box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
             transition: transform .2s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
@@ -400,14 +415,18 @@ foreach ($navMenus as &$menu) {
         }
         .mega-news-thumb {
             position: relative;
-            height: 7rem;
             width: 100%;
+            aspect-ratio: 4 / 3;
+            max-height: 120px;
             overflow: hidden;
-            border-radius: 0.8rem;
+            border-radius: 0.6rem;
             background: rgba(226, 232, 240, 0.75);
-            margin-bottom: 0.65rem;
+            margin-bottom: 0;
+            isolation: isolate;
         }
         .mega-news-thumb img {
+            position: absolute;
+            inset: 0;
             height: 100%;
             width: 100%;
             object-fit: cover;
@@ -416,11 +435,37 @@ foreach ($navMenus as &$menu) {
         .mega-news-card:hover .mega-news-thumb img {
             transform: scale(1.08);
         }
-        @media (min-width: 640px) {
-            .mega-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .mega-news-thumb::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(to top, rgba(2, 6, 23, 0.86) 0%, rgba(2, 6, 23, 0.30) 48%, rgba(2, 6, 23, 0) 72%);
+            pointer-events: none;
         }
-        @media (min-width: 1024px) {
-            .mega-news-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .mega-news-caption {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2;
+            padding: 0.4rem 0.45rem 0.45rem;
+            color: #fff;
+        }
+        .mega-news-caption p { margin: 0; }
+        .mega-news-title {
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            line-height: 1.25;
+        }
+        .mega-news-card:hover .mega-news-title { color: #fff; }
+        .mega-news-date { color: rgba(255,255,255,0.78); font-size: 0.6rem; margin-top: 0.15rem; }
+        @media (max-width: 639px) {
+            .mega-news-grid .mega-news-card {
+                flex-basis: 128px;
+                width: 128px;
+            }
         }
         .mega-link {
             display: block;
@@ -758,7 +803,7 @@ foreach ($navMenus as &$menu) {
                         <div class="mega-panel">
                             <?php if (!empty($navMenu['submenus'])): ?>
                                 <!-- Mega menu with submenus - Wide horizontal layout -->
-                                <div class="grid grid-cols-4 gap-6">
+                                <div class="mega-submenu-grid" style="--submenu-count: <?php echo max(1, count($navMenu['submenus'])); ?>;">
                                     <?php foreach ($navMenu['submenus'] as $submenu): ?>
                                         <div class="border-r border-slate-100 last:border-r-0 pr-6 last:pr-0">
                                             <div class="mega-column-title mb-4 pb-2 border-b-2 border-purple-200">
@@ -767,28 +812,28 @@ foreach ($navMenus as &$menu) {
                                                 </a>
                                             </div>
                                             <?php if (!empty($submenu['berita'])): ?>
-                                                <div class="space-y-4">
-                                                    <?php foreach ($submenu['berita'] as $beritaItem): ?>
-                                                        <a href="<?php echo htmlspecialchars(berita_url($beritaItem)); ?>" class="group block no-underline">
-                                                            <?php if (!empty($beritaItem['gambar'])): ?>
-                                                                <div class="w-full h-36 rounded-lg overflow-hidden mb-2">
-                                                                    <img src="<?php echo htmlspecialchars(berita_image_url($beritaItem['gambar'])); ?>" 
+                                                <div class="space-y-3">
+                                                    <?php foreach (array_slice($submenu['berita'], 0, 5) as $beritaItem): ?>
+                                                        <a href="<?php echo htmlspecialchars(berita_url($beritaItem)); ?>" class="mega-news-card group block no-underline">
+                                                            <div class="mega-news-thumb <?php echo empty($beritaItem['gambar']) ? 'flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100' : ''; ?>">
+                                                                <?php if (!empty($beritaItem['gambar'])): ?>
+                                                                    <img src="<?php echo htmlspecialchars(berita_image_url($beritaItem['gambar'])); ?>"
                                                                          alt="<?php echo htmlspecialchars($beritaItem['judul']); ?>"
-                                                                         class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                                                                </div>
-                                                            <?php else: ?>
-                                                                <div class="w-full h-36 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center mb-2">
-                                                                    <svg class="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                         loading="lazy">
+                                                                <?php else: ?>
+                                                                    <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
                                                                     </svg>
+                                                                <?php endif; ?>
+                                                                <div class="mega-news-caption">
+                                                                    <p class="mega-news-title line-clamp-2">
+                                                                        <?php echo htmlspecialchars($beritaItem['judul']); ?>
+                                                                    </p>
+                                                                    <p class="mega-news-date">
+                                                                        <?php echo formatTanggalIndonesia($beritaItem['tanggal_publikasi']); ?>
+                                                                    </p>
                                                                 </div>
-                                                            <?php endif; ?>
-                                                            <p class="text-sm font-semibold text-slate-800 group-hover:text-purple-600 transition line-clamp-2 leading-snug mb-1">
-                                                                <?php echo htmlspecialchars($beritaItem['judul']); ?>
-                                                            </p>
-                                                            <p class="text-xs text-slate-500">
-                                                                <?php echo formatTanggalIndonesia($beritaItem['tanggal_publikasi']); ?>
-                                                            </p>
+                                                            </div>
                                                         </a>
                                                     <?php endforeach; ?>
                                                 </div>
@@ -817,35 +862,36 @@ foreach ($navMenus as &$menu) {
                                 }
                                 $megaNewsStmt->close();
                                 ?>
-                                <div class="w-[1040px] max-w-[calc(94vw-4rem)]">
+                                <?php $megaNews = array_slice($megaNews ?? [], 0, 5); ?>
+                                <div class="max-w-[calc(94vw-4rem)]">
                                     <div class="mega-column-title mb-4 pb-2 border-b-2 border-purple-100">
                                         <a href="kategori?kategori=<?php echo (int)$navMenu['kategori_id']; ?>" class="hover:text-purple-600 transition">
                                             <?php echo htmlspecialchars($navMenu['kategori_nama'] ?? $navMenu['nama']); ?>
                                         </a>
                                     </div>
                                     <?php if (!empty($megaNews)): ?>
-                                        <div class="mega-news-grid">
+                                        <div class="mega-news-grid" style="--mega-count: <?php echo count($megaNews); ?>;">
                                             <?php foreach ($megaNews as $megaBerita): ?>
                                                 <a href="<?php echo htmlspecialchars(berita_url($megaBerita)); ?>" class="mega-news-card group">
-                                                    <?php if (!empty($megaBerita['gambar'])): ?>
-                                                        <div class="mega-news-thumb">
-                                                            <img src="<?php echo htmlspecialchars(berita_image_url($megaBerita['gambar'])); ?>" 
+                                                    <div class="mega-news-thumb <?php echo empty($megaBerita['gambar']) ? 'flex items-center justify-center bg-gradient-to-br from-purple-100/80 to-blue-100/80' : ''; ?>">
+                                                        <?php if (!empty($megaBerita['gambar'])): ?>
+                                                            <img src="<?php echo htmlspecialchars(berita_image_url($megaBerita['gambar'])); ?>"
                                                                  alt="<?php echo htmlspecialchars($megaBerita['judul']); ?>"
                                                                  loading="lazy">
-                                                        </div>
-                                                    <?php else: ?>
-                                                        <div class="mega-news-thumb flex items-center justify-center bg-gradient-to-br from-purple-100/80 to-blue-100/80">
-                                                            <svg class="w-12 h-12 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <?php else: ?>
+                                                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
                                                             </svg>
+                                                        <?php endif; ?>
+                                                        <div class="mega-news-caption">
+                                                            <p class="mega-news-title line-clamp-2">
+                                                                <?php echo htmlspecialchars($megaBerita['judul']); ?>
+                                                            </p>
+                                                            <p class="mega-news-date">
+                                                                <?php echo formatTanggalIndonesia($megaBerita['tanggal_publikasi']); ?>
+                                                            </p>
                                                         </div>
-                                                    <?php endif; ?>
-                                                    <p class="text-sm font-extrabold text-slate-800 group-hover:text-purple-600 transition line-clamp-2 leading-tight">
-                                                        <?php echo htmlspecialchars($megaBerita['judul']); ?>
-                                                    </p>
-                                                    <p class="text-xs text-slate-500 mt-1">
-                                                        <?php echo formatTanggalIndonesia($megaBerita['tanggal_publikasi']); ?>
-                                                    </p>
+                                                    </div>
                                                 </a>
                                             <?php endforeach; ?>
                                         </div>
