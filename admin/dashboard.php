@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<div class="mb-6 grid gap-4 md:grid-cols-4">
+<div class="mb-6 stat-grid">
     <div class="relative overflow-hidden rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-500 via-purple-500 to-purple-600 p-5 text-white shadow-lg shadow-violet-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-violet-300/50">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wide">Kategori</span>
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('layers', 'w-5 h-5'); ?></span>
             </div>
-            <div class="text-4xl font-black tracking-tight"><?php echo $totalKategori; ?></div>
+            <div class="text-4xl font-black tracking-tight" style="font-size: clamp(1.5rem, 5vw, 2.25rem);"><?php echo $totalKategori; ?></div>
         </div>
     </div>
     <div class="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-500 via-blue-500 to-blue-600 p-5 text-white shadow-lg shadow-sky-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-sky-300/50">
@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wide">Berita</span>
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('news', 'w-5 h-5'); ?></span>
             </div>
-            <div class="text-4xl font-black tracking-tight"><?php echo $totalBerita; ?></div>
+            <div class="text-4xl font-black tracking-tight" style="font-size: clamp(1.5rem, 5vw, 2.25rem);"><?php echo $totalBerita; ?></div>
         </div>
     </div>
     <div class="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-500 via-teal-500 to-teal-600 p-5 text-white shadow-lg shadow-emerald-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-emerald-300/50">
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wide">Publish</span>
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('check', 'w-5 h-5'); ?></span>
             </div>
-            <div class="text-4xl font-black tracking-tight"><?php echo $totalPublish; ?> <span class="text-xl font-extrabold text-white/70"><?php echo $publishRate; ?>%</span></div>
+            <div class="text-4xl font-black tracking-tight" style="font-size: clamp(1.5rem, 5vw, 2.25rem);"><?php echo $totalPublish; ?> <span class="text-xl font-extrabold text-white/70" style="font-size: clamp(0.875rem, 3vw, 1.25rem);"><?php echo $publishRate; ?>%</span></div>
         </div>
     </div>
     <a href="komentar?status=pending" class="relative overflow-hidden rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-5 text-white shadow-lg shadow-amber-200/70 transition hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-amber-300/50">
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-black uppercase tracking-wide">Komentar</span>
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-white/20"><?php echo ui_icon('mail', 'w-5 h-5'); ?></span>
             </div>
-            <div class="text-4xl font-black tracking-tight"><?php echo (int)$totalKomentarPending; ?></div>
+            <div class="text-4xl font-black tracking-tight" style="font-size: clamp(1.5rem, 5vw, 2.25rem);"><?php echo (int)$totalKomentarPending; ?></div>
         </div>
     </a>
 </div>
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-teal-700">4 Aksi</span>
         </div>
-        <div class="grid gap-4 sm:grid-cols-2">
+        <div class="quick-grid">
             <a href="berita?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-100">
                 <div class="flex items-start justify-between">
                     <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-200/60"><?php echo ui_icon('plus', 'w-5 h-5'); ?></span>
@@ -244,13 +244,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         </span>
                         
                         <div class="flex flex-col gap-1">
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
                                 <span class="rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wider <?php echo $badge; ?>">
                                     <?php echo htmlspecialchars($action); ?>
                                 </span>
                                 <span class="text-xs font-bold text-slate-400"><?php echo $time; ?></span>
                             </div>
-                            <div class="text-sm font-bold text-slate-900"><?php echo $details; ?></div>
+                            <div class="text-sm font-bold text-slate-900 break-words"><?php echo $details; ?></div>
                             <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
                                 <?php echo ui_icon('user', 'w-3 h-3'); ?>
                                 <?php echo htmlspecialchars($log['admin_username'] ?? 'Admin'); ?>
@@ -324,6 +324,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 })();
 </script>
+
+<style>
+    @media (max-width: 767px) {
+        .p-5 { padding: 1rem; }
+        .relative.ml-2.pl-12 { margin-left: 0.25rem; padding-left: 2rem; }
+        .absolute.-left-12 { left: -2rem; }
+    }
+</style>
 
 <?php
 include __DIR__ . '/footer.php';

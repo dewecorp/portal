@@ -304,12 +304,7 @@ if ($error) {
         </div>
     </div>
 
-    <style>
-        .form-grid {
-            display: grid;
-            gap: 1rem;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        }
+     <style>
         .form-group {
             display: flex;
             flex-direction: column;
@@ -319,6 +314,47 @@ if ($error) {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
+        }
+        @media (max-width: 767px) {
+            .table {
+                font-size: 0.8rem;
+            }
+            .table th,
+            .table td {
+                padding: 0.6rem 0.4rem;
+            }
+            .btn-icon {
+                width: 1.8rem !important;
+                height: 1.8rem !important;
+            }
+            .btn-icon svg {
+                width: 0.85rem !important;
+                height: 0.85rem !important;
+            }
+            .badge {
+                font-size: 0.65rem;
+                padding: 0.25rem 0.5rem;
+            }
+            .btn-primary {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .h4 {
+                font-size: 1.3rem;
+            }
+            .mb-6 {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+            #btnTambahPengguna {
+                width: 100%;
+            }
+            .d-flex.gap-3 {
+                gap: 0.5rem !important;
+            }
+            code {
+                font-size: 0.75rem !important;
+            }
         }
     </style>
 

@@ -196,52 +196,74 @@
         });
     })();
     
-    // Admin page-transition loader: tampil saat pindah laman, bukan saat reload
+    // Admin initial loader: tampil dulu setiap halaman admin dibuka, lalu sembunyi
     (function() {
         var loader = document.getElementById('adminLoader');
         if (!loader) return;
         var show = function() { loader.classList.add('is-show'); };
         var hide = function() { loader.classList.remove('is-show'); };
-        var navEntry = null;
-        try {
-            var entries = performance.getEntriesByType('navigation');
-            navEntry = entries && entries.length ? entries[0].type : null;
-        } catch (e) {}
-        if (navEntry === 'reload') {
-            try { sessionStorage.removeItem('adminNav'); } catch (e) {}
-        } else {
-            try {
-                var justLoggedIn = /[?&]login=success(&|$)/.test(window.location.search || '');
-                if (justLoggedIn) {
-                    sessionStorage.removeItem('adminNav');
-                } else if (sessionStorage.getItem('adminNav') === '1') {
-                    sessionStorage.removeItem('adminNav');
-                    requestAnimationFrame(function() {
-                        requestAnimationFrame(function() {
-                            show();
-                            setTimeout(hide, 900);
-                        });
-                    });
-                }
-            } catch (e) {}
-        }
+        var hidden = false;
+        var hideOnce = function() {
+            if (hidden) return;
+            hidden = true;
+            hide();
+        };
+        window.addEventListener('load', function() {
+            setTimeout(hideOnce, 500);
+        });
+        setTimeout(hideOnce, 2500);
         document.addEventListener('click', function(e) {
             var a = e.target.closest ? e.target.closest('a[href]') : null;
             if (!a) return;
             var href = a.getAttribute('href') || '';
             if (href.charAt(0) === '#' || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
             if (href.indexOf('javascript:') === 0) return;
-            try { sessionStorage.setItem('adminNav', '1'); } catch (e) {}
+            show();
         }, true);
+        document.addEventListener('submit', function() { show(); }, true);
         window.addEventListener('pageshow', function(e) {
-            if (e.persisted) hide();
+            if (e.persisted) hideOnce();
         });
-        window.addEventListener('pagehide', function() { hide(); });
+    })();
+
+    // Mobile sidebar drawer
+    (function() {
+        var btn = document.getElementById('adminMenuBtn');
+        var backdrop = document.getElementById('sidebarBackdrop');
+        if (!btn) return;
+        function closeSidebar() {
+            document.body.classList.remove('sidebar-open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var open = document.body.classList.toggle('sidebar-open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        if (backdrop) backdrop.addEventListener('click', closeSidebar);
+        document.addEventListener('click', function(e) {
+            if (!document.body.classList.contains('sidebar-open')) return;
+            if (window.innerWidth >= 768) { closeSidebar(); return; }
+            var sidebar = document.getElementById('adminSidebar');
+            if (sidebar && sidebar.contains(e.target)) {
+                if (e.target.closest('a')) closeSidebar();
+                return;
+            }
+            if (e.target === btn || btn.contains(e.target)) return;
+            closeSidebar();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeSidebar();
+        });
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 768) closeSidebar();
+        });
     })();
 
     // Live datetime functionality for admin navbar
     (function() {        var dateTimeElement = document.getElementById('adminDateTime');
-        if (!dateTimeElement) return;
+        var dateMobileElement = document.getElementById('adminDateMobile');
+        if (!dateTimeElement && !dateMobileElement) return;
         
         var hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         var bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -256,7 +278,8 @@
             var minutes = now.getMinutes().toString().padStart(2, '0');
             var seconds = now.getSeconds().toString().padStart(2, '0');
             
-            dateTimeElement.textContent = namaHari + ', ' + tgl + ' ' + bln + ' ' + thn + ' ' + hours + ':' + minutes + ':' + seconds + ' WIB';
+            if (dateTimeElement) dateTimeElement.textContent = namaHari + ', ' + tgl + ' ' + bln + ' ' + thn + ' ' + hours + ':' + minutes + ':' + seconds + ' WIB';
+            if (dateMobileElement) dateMobileElement.textContent = namaHari + ', ' + tgl + ' ' + bln + ' ' + thn;
         }
         
         // Update immediately

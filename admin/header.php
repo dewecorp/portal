@@ -98,10 +98,14 @@ function formatHariTanggalIndonesia($tanggal) {
             color: inherit;
             text-decoration: none;
         }
+        body { padding-top: 68px; }
         .navbar-admin {
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 30;
+            left: 0;
+            right: 0;
+            height: 68px;
+            z-index: 100;
             background: var(--admin-nav-gradient);
             color: #fff;
             border-bottom: 1px solid rgba(255,255,255,0.14);
@@ -251,14 +255,25 @@ function formatHariTanggalIndonesia($tanggal) {
         }
         @media (min-width: 768px) {
             .admin-layout {
-                grid-template-columns: 260px minmax(0, 1fr);
+                display: block;
+            }
+            #adminSidebar {
+                display: block !important;
+                transform: none !important;
+            }
+            main {
+                margin-left: 260px;
+                width: calc(100% - 260px);
             }
         }
         .sidebar {
-            position: sticky;
+            position: fixed;
             top: 68px;
-            height: calc(100vh - 68px);
+            left: 0;
+            bottom: 0;
+            width: 260px;
             overflow-y: auto;
+            overscroll-behavior: contain;
             background: var(--admin-nav-gradient);
             border-right: 1px solid rgba(255,255,255,0.16);
             padding: 1.25rem 1rem;
@@ -792,19 +807,137 @@ function formatHariTanggalIndonesia($tanggal) {
         .cke_notification_warning {
             display: none !important;
         }
+        .grid { display: grid; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.25rem; }
+        .stat-grid { display: grid; gap: 0.65rem; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; min-width: 0; }
+        .quick-grid, .two-grid, .chart-grid, .form-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; }
+        .stat-grid > *, .quick-grid > *, .two-grid > *, .chart-grid > *, .form-grid > * { min-width: 0; }
+        .form-actions { grid-column: 1 / -1; }
+        .editor-grid { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; }
+        @media (min-width: 640px) {
+            .quick-grid, .two-grid, .chart-grid, .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+            .quick-grid > a { padding: 1rem !important; }
+            .quick-grid > a .mt-4 { margin-top: 0.75rem !important; }
+            .editor-grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+        }
+        html { overflow-x: visible; }
+        body { overflow-x: clip; }
+        @supports not (overflow: clip) {
+            body { overflow-x: visible; }
+        }
+        main { min-width: 0; overflow-x: clip; }
+        @supports not (overflow: clip) {
+            main { overflow-x: hidden; }
+        }
+        canvas { max-width: 100%; }
+        #adminMenuBtn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 2.4rem;
+            height: 2.4rem;
+            flex: 0 0 auto;
+            border-radius: 0.7rem;
+            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            padding: 0;
+        }
+        #adminMenuBtn svg { width: 1.25rem; height: 1.25rem; }
+        #sidebarBackdrop { display: none; }
+        #adminDateMobile { display: none; }
+        .navbar-brand-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         @media (max-width: 767px) {
             .navbar .container-fluid {
-                flex-wrap: wrap;
-                gap: 0.75rem;
+                flex-wrap: nowrap !important;
+                gap: 0.5rem;
+                align-items: center;
+            }
+            #adminMenuBtn { display: inline-flex; }
+            .navbar-brand {
+                flex: 1 1 auto;
+                min-width: 0;
+                width: auto !important;
+                padding: 0.6rem 0;
+                gap: 0.5rem;
+                overflow: hidden;
             }
             .navbar-brand {
-                width: 100%;
+                padding: 0;
+                gap: 0;
             }
-            .admin-user-menu {
-                display: none;
+            .navbar-brand-logo {
+                width: 2.1rem;
+                height: 2.1rem;
             }
-            main {
-                padding: 1rem;
+            .navbar-brand-text { display: none; }
+            .navbar .ms-auto {
+                flex: 1 1 auto;
+                min-width: 0;
+                justify-content: flex-end;
+            }
+            .admin-datetime {
+                font-size: 0.72rem;
+                padding: 0.35rem 0.7rem;
+                white-space: nowrap;
+                max-width: 100%;
+                overflow: hidden;
+            }
+            .admin-datetime svg { display: none; }
+            #adminDateTime { display: none; }
+            #adminDateMobile {
+                display: inline-block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                vertical-align: middle;
+            }
+            .admin-user-menu, .admin-user-trigger { display: none !important; }
+            main { padding: 0.75rem; }
+            .stat-grid { gap: 0.6rem; }
+            .stat-grid > * { padding: 0.9rem !important; border-radius: 1rem !important; }
+            .stat-grid .mb-5 { margin-bottom: 0.7rem !important; }
+            .stat-grid .text-4xl { font-size: 1.35rem !important; }
+            .stat-grid .rounded-full { font-size: 0.6rem; padding: 0.25rem 0.55rem; }
+            .stat-grid .h-9 { height: 2rem; width: 2rem; }
+            .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .table-responsive .table { min-width: 560px; }
+            body { padding-top: 60px; }
+            .navbar-admin { height: 60px; }
+            #adminSidebar {
+                position: fixed;
+                left: 0;
+                top: 60px;
+                bottom: 0;
+                width: 270px;
+                max-width: 85vw;
+                height: auto;
+                z-index: 60;
+                transform: translateX(-105%);
+                transition: transform 0.22s ease;
+                box-shadow: 8px 0 20px rgba(0,0,0,0.18);
+                display: block !important;
+            }
+            body.sidebar-open { overflow: hidden; }
+            body.sidebar-open #adminSidebar { transform: translateX(0); }
+            body.sidebar-open #sidebarBackdrop {
+                display: block;
+                position: fixed;
+                inset: 60px 0 0 0;
+                z-index: 55;
+                top: 60px;
+                background: rgba(15, 23, 42, 0.45);
             }
         }
         /* Final admin theme overrides: keep navbar and sidebar visually identical. */
@@ -881,7 +1014,7 @@ function formatHariTanggalIndonesia($tanggal) {
     </style>
 </head>
 <body>
-<div class="admin-loader" id="adminLoader" aria-hidden="true">
+<div class="admin-loader is-show" id="adminLoader" aria-hidden="true">
     <div class="admin-loader-ring">
         <?php if (!empty($settings['logo_path'])): ?>
             <img class="admin-loader-logo" src="../<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="">
@@ -892,6 +1025,11 @@ function formatHariTanggalIndonesia($tanggal) {
 </div>
 <nav class="navbar navbar-expand navbar-dark navbar-admin">
     <div class="container-fluid">
+        <button type="button" id="adminMenuBtn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="adminSidebar">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
         <a class="navbar-brand" href="dashboard">
             <span class="navbar-brand-logo" aria-hidden="true">
                 <?php if (!empty($settings['logo_path'])): ?>
@@ -903,7 +1041,7 @@ function formatHariTanggalIndonesia($tanggal) {
                     </svg>
                 <?php endif; ?>
             </span>
-            <span>Dashboard Portal Berita</span>
+            <span class="navbar-brand-text">Dashboard Portal Berita</span>
         </a>
         <div class="ms-auto d-flex align-items-center">
             <span class="admin-datetime me-3">
@@ -911,6 +1049,7 @@ function formatHariTanggalIndonesia($tanggal) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
                 <span id="adminDateTime"><?php echo formatHariTanggalIndonesia(date('Y-m-d')) . ' ' . date('H:i') . ' WIB'; ?></span>
+                <span id="adminDateMobile"><?php echo formatHariTanggalIndonesia(date('Y-m-d')); ?></span>
             </span>
             <div class="admin-user-menu" id="adminUserMenu">
                 <button type="button" class="admin-user-trigger" id="adminUserTrigger" aria-expanded="false" aria-haspopup="true">
@@ -940,7 +1079,7 @@ function formatHariTanggalIndonesia($tanggal) {
 </nav>
 <div class="container-fluid admin-shell">
     <div class="admin-layout">
-        <aside class="d-none d-md-block sidebar">
+        <aside class="d-none d-md-block sidebar" id="adminSidebar">
             <p class="sidebar-title">Navigasi</p>
             <ul class="nav flex-column">
                 <li class="nav-item mb-1">
@@ -1073,4 +1212,5 @@ function formatHariTanggalIndonesia($tanggal) {
                 </li>
             </ul>
         </aside>
+        <div id="sidebarBackdrop" aria-hidden="true"></div>
         <main>

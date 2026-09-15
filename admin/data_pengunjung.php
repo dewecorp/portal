@@ -74,7 +74,7 @@ include __DIR__ . '/header.php';
     </form>
 </div>
 
-<div class="mb-6 grid gap-4 md:grid-cols-4">
+<div class="mb-6 stat-grid">
     <div class="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-500 via-blue-500 to-blue-600 p-5 text-white shadow-lg shadow-sky-200/70 transition hover:-translate-y-0.5 hover:shadow-xl">
         <div class="absolute -right-7 -top-7 h-28 w-28 rounded-full bg-white/10"></div>
         <div class="absolute -bottom-9 -left-9 h-24 w-24 rounded-full bg-white/5"></div>
@@ -124,7 +124,7 @@ foreach (['Negara Pengunjung' => $countryStats, 'OS yang Digunakan' => $osStats,
 }
 ?>
 
-<div class="grid gap-5 xl:grid-cols-2">
+<div class="chart-grid">
     <?php $bi = 0; foreach ($chartData as $title => $chart): ?>
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="mb-4 flex items-center justify-between gap-3">
@@ -196,5 +196,23 @@ foreach (['Negara Pengunjung' => $countryStats, 'OS yang Digunakan' => $osStats,
     });
 })();
 </script>
+
+
+<style>
+    @media (max-width: 767px) {
+        .table { font-size: 0.8rem; }
+        .table th, .table td { padding: 0.6rem 0.4rem; }
+        .btn-icon { width: 1.8rem !important; height: 1.8rem !important; }
+        .btn-icon svg { width: 0.85rem !important; height: 0.85rem !important; }
+        .badge { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+        .btn-primary { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .h4 { font-size: 1.3rem; }
+        .p-5 { padding: 1rem; }
+        input.form-control, select.form-select { font-size: 0.9rem; }
+        .form-label { font-size: 0.8rem; }
+        .text-4xl { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+        .modal { padding: 1rem 0.5rem; }
+    }
+</style>
 
 <?php include __DIR__ . '/footer.php'; ?>

@@ -118,8 +118,8 @@ include __DIR__ . '/header.php';
 <?php if (isset($_GET['err'])): ?>
 <script>document.addEventListener('DOMContentLoaded', function() { Swal.fire({ icon: 'error', title: 'Gagal!' }); });</script>
 <?php endif; ?>
-<div class="row g-3 mb-4" style="align-items:stretch;">
-    <div class="col-md-6" style="display:flex;">
+<div class="mb-4 two-grid" style="align-items:stretch;">
+    <div style="display:flex;">
         <div class="card border-0 shadow-sm rounded-4" style="flex:1;display:flex;flex-direction:column;">
             <div class="card-body" style="flex:1;display:flex;flex-direction:column;">
                 <h2 class="h6 mb-3">Backup Database</h2>
@@ -130,7 +130,7 @@ include __DIR__ . '/header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-6" style="display:flex;">
+    <div style="display:flex;">
         <div class="card border-0 shadow-sm rounded-4" style="flex:1;display:flex;flex-direction:column;">
             <div class="card-body" style="flex:1;display:flex;flex-direction:column;">
                 <h2 class="h6 mb-3">Restore Database</h2>
@@ -214,4 +214,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<style>
+    @media (max-width: 767px) {
+        .table { font-size: 0.8rem; }
+        .table th, .table td { padding: 0.6rem 0.4rem; }
+        .btn-icon { width: 1.8rem !important; height: 1.8rem !important; }
+        .btn-icon svg { width: 0.85rem !important; height: 0.85rem !important; }
+        .badge { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+        .btn-primary { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .h4 { font-size: 1.3rem; }
+        .p-5 { padding: 1rem; }
+        input.form-control, select.form-select { font-size: 0.9rem; }
+        .form-label { font-size: 0.8rem; }
+        .text-4xl { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+        .modal { padding: 1rem 0.5rem; }
+    }
+</style>
+
 <?php include __DIR__ . '/footer.php'; ?>

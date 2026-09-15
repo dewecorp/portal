@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body class="min-h-screen text-slate-900 antialiased" style="background: radial-gradient(60rem 30rem at 15% -10%, rgba(20,184,166,0.25), transparent 60%), radial-gradient(50rem 28rem at 90% 110%, rgba(99,102,241,0.22), transparent 60%), #020617;">
-<div class="admin-loader" id="adminLoader" aria-hidden="true">
+<div class="admin-loader is-show" id="adminLoader" aria-hidden="true">
     <div class="admin-loader-ring">
         <?php if (!empty($settings['logo_path'])): ?>
             <img class="admin-loader-logo" src="../<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="">
@@ -149,6 +149,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 <script>
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            document.getElementById('adminLoader')?.classList.remove('is-show');
+        }, 600);
+    });
+    setTimeout(function() {
+        document.getElementById('adminLoader')?.classList.remove('is-show');
+    }, 2500);
     document.getElementById('loginForm')?.addEventListener('submit', function() {
         document.getElementById('adminLoader')?.classList.add('is-show');
     });

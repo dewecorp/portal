@@ -76,7 +76,7 @@ function render_berita_form(array $kategoris, array $data, string $action, int $
         </div>
     <?php endif; ?>
 
-    <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" enctype="multipart/form-data" class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+    <form method="post" action="<?php echo htmlspecialchars($formAction); ?>" enctype="multipart/form-data" class="editor-grid">
         <section class="space-y-4">
             <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <input type="text" name="judul" id="post_title_input" class="w-full border-0 px-0 py-1 text-3xl font-extrabold leading-tight text-slate-950 outline-none placeholder:text-slate-300 focus:ring-0" required placeholder="Tambahkan judul" value="<?php echo htmlspecialchars(berita_field($data, 'judul')); ?>">
@@ -600,5 +600,23 @@ document.addEventListener('DOMContentLoaded', function() {
     refresh();
 });
 </script>
+
+
+<style>
+    @media (max-width: 767px) {
+        .table { font-size: 0.8rem; }
+        .table th, .table td { padding: 0.6rem 0.4rem; }
+        .btn-icon { width: 1.8rem !important; height: 1.8rem !important; }
+        .btn-icon svg { width: 0.85rem !important; height: 0.85rem !important; }
+        .badge { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+        .btn-primary { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .h4 { font-size: 1.3rem; }
+        .p-5 { padding: 1rem; }
+        input.form-control, select.form-select { font-size: 0.9rem; }
+        .form-label { font-size: 0.8rem; }
+        .text-4xl { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+        .modal { padding: 1rem 0.5rem; }
+    }
+</style>
 
 <?php include __DIR__ . '/footer.php'; ?>

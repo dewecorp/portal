@@ -222,10 +222,10 @@ include __DIR__ . '/header.php';
     </script>
 <?php endif; ?>
 
-<div class="row">
-    <form method="post" enctype="multipart/form-data" class="col-12">
-        <div class="row g-3">
-            <div class="col-md-6">
+<div class="two-grid">
+    <form method="post" enctype="multipart/form-data" id="settingsForm" style="display: contents;">
+        <div style="display: contents;">
+            <div>
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body">
                     <h2 class="h6 mb-3">Tema & Gaya</h2>
@@ -336,7 +336,7 @@ include __DIR__ . '/header.php';
                 </div>
             </div>
             </div>
-            <div class="col-md-6">
+            <div>
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body">
                         <h2 class="h6 mb-3">Pratinjau Tema</h2>
@@ -400,14 +400,30 @@ include __DIR__ . '/header.php';
                         <textarea name="komentar_kata_kasar" class="form-control" rows="3" placeholder="judi, slot, togel"><?php echo htmlspecialchars($current['komentar_kata_kasar'] ?? ''); ?></textarea>
                     </div>
 </div>
-        </div>
-        </div>
-        </div>
-        <div class="mt-4 d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+         </div>
         </div>
     </form>
 </div>
+<div class="mt-4 d-flex justify-content-end">
+    <button type="submit" form="settingsForm" class="btn btn-primary">Simpan Pengaturan</button>
+</div>
+
+<style>
+    @media (max-width: 767px) {
+        .table { font-size: 0.8rem; }
+        .table th, .table td { padding: 0.6rem 0.4rem; }
+        .btn-icon { width: 1.8rem !important; height: 1.8rem !important; }
+        .btn-icon svg { width: 0.85rem !important; height: 0.85rem !important; }
+        .badge { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
+        .btn-primary { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .h4 { font-size: 1.3rem; }
+        .p-5 { padding: 1rem; }
+        input.form-control, select.form-select { font-size: 0.9rem; }
+        .form-label { font-size: 0.8rem; }
+        .modal { padding: 1rem 0.5rem; }
+        .col-md-6 { width: 100%; }
+    }
+</style>
 
 <?php
 include __DIR__ . '/footer.php';
