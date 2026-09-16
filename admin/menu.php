@@ -199,9 +199,9 @@ function render_menu_builder_items(array $menusByParent, int $parentId = 0, int 
         $typeLabel = menu_type_label($type);
         $isActive = (int)($menu['is_active'] ?? 1) === 1;
         ?>
-        <div class="menu-builder-item" draggable="true" data-id="<?php echo $menuId; ?>">
+        <div class="menu-builder-item" draggable="false" data-id="<?php echo $menuId; ?>">
             <div class="menu-builder-row">
-                <button type="button" class="menu-drag-handle" aria-label="Geser menu" tabindex="-1"><?php echo ui_icon('grip', 'w-4 h-4'); ?></button>
+                <span class="menu-drag-handle" role="button" tabindex="-1" aria-label="Geser menu" title="Geser menu"><?php echo ui_icon('grip', 'w-4 h-4'); ?></span>
                 <div class="menu-builder-content">
                     <div class="menu-builder-title"><?php echo htmlspecialchars($menu['nama']); ?></div>
                     <div class="menu-builder-meta">
@@ -469,17 +469,27 @@ include __DIR__ . '/header.php';
         min-height: 60px;
     }
     .menu-child-dropzone {
-        margin: 8px 0 2px 28px;
+        margin: 0 0 0 28px;
         padding: 0 0 0 14px;
-        border-left: 2px dashed #cbd5e1;
+        border-left: 2px solid transparent;
         display: grid;
         gap: 10px;
-        min-height: 44px;
+        min-height: 0;
     }
-    .menu-dropzone.is-over { background: #f1f5f9; }
+    .menu-child-dropzone.has-children {
+        margin: 8px 0 2px 28px;
+        border-left-color: #e2e8f0;
+    }
+    body.menu-dragging .menu-child-dropzone {
+        margin: 8px 0 2px 28px;
+        min-height: 44px;
+        border-left-color: #cbd5e1;
+        border-left-style: dashed;
+    }
+    .menu-dropzone.is-over { background: #f1f5f9; border-radius: 12px; }
     .menu-dropzone.is-over .menu-drop-hint { border-color: #0f9f94; color: #0b8077; background: #ecfdf5; }
     .menu-drop-hint {
-        display: block;
+        display: none;
         border: 1.5px dashed #cbd5e1;
         border-radius: 12px;
         color: #94a3b8;
@@ -489,14 +499,34 @@ include __DIR__ . '/header.php';
         text-align: center;
         background: #fbfdff;
     }
+    body.menu-dragging .menu-drop-hint { display: block; }
     .menu-drop-placeholder {
-        height: 52px;
-        border: 2px dashed #0f9f94;
-        border-radius: 14px;
-        background: #ecfdf5;
+        height: 6px;
+        border-radius: 999px;
+        background: #0f9f94;
+        margin: 2px 0;
     }
     .menu-builder-item { border-radius: 14px; }
-    .menu-builder-item.is-dragging { opacity: .45; }
+    .menu-builder-item.is-dragging { opacity: .35; }
+    body.menu-dragging { user-select: none; -webkit-user-select: none; }
+    body.menu-dragging .menu-drag-handle { cursor: grabbing; }
+    .menu-drag-handle { display: inline-flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+    .menu-builder-row { touch-action: pan-y; }
+    .menu-pointer-ghost {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 9999;
+        margin: 0;
+        pointer-events: none;
+        opacity: .95;
+        border-radius: 14px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+    }
+    .menu-builder-item.is-pointer-dragging {
+        opacity: .35;
+        box-shadow: none;
+    }
     .menu-builder-row {
         display: flex;
         align-items: center;
@@ -708,6 +738,42 @@ document.addEventListener('DOMContentLoaded', function() {
     var draggedId = 0;
     var placeholder = document.createElement('div');
     placeholder.className = 'menu-drop-placeholder';
+    var saveOrderButton = document.getElementById('btnSaveMenuOrder');
+    var rootZone = document.getElementById('menuRootDropzone');
+
+    function markZonesWithChildren() {
+        document.querySelectorAll('.menu-child-dropzone').forEach(function(zone) {
+            var hasKids = zone.querySelector(':scope > .menu-builder-item') !== null;
+            zone.classList.toggle('has-children', hasKids);
+        });
+    }
+
+    function autoSaveMenuOrder(silent) {
+        if (!saveOrderButton || !rootZone) return;
+        var rows = [];
+        collectMenuOrder(rootZone, 0, rows);
+        saveOrderButton.disabled = true;
+        fetch('menu?action=save_order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ items: rows })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (!data.success && !silent) {
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: data.error || 'Gagal menyimpan struktur menu' });
+            }
+        })
+        .catch(function() {
+            if (!silent) Swal.fire({ icon: 'error', title: 'Error!', text: 'Terjadi kesalahan saat menyimpan struktur menu' });
+        })
+        .finally(function() {
+            saveOrderButton.disabled = false;
+        });
+    }
 
     function getDragAfterElement(container, y) {
         var draggableElements = Array.prototype.slice.call(container.querySelectorAll(':scope > .menu-builder-item:not(.is-dragging)'));
@@ -731,25 +797,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function bindDrag(item) {
-        if (item._dragBound) return;
+        // Drag native dimatikan; semua item digeser lewat pointer dari gagang.
+        item.draggable = false;
         item._dragBound = true;
-        item.addEventListener('dragstart', function(event) {
-            if (event.target.closest && event.target.closest('.menu-nav, .menu-act')) { event.preventDefault(); return; }
-            draggedItem = item;
-            draggedId = parseInt(item.getAttribute('data-id') || '0', 10) || 0;
-            item.classList.add('is-dragging');
-            if (event.dataTransfer) {
-                try { event.dataTransfer.effectAllowed = 'copyMove'; } catch (x) {}
-                try { event.dataTransfer.setData('text/menu-id', String(draggedId)); } catch (x) {}
-                try { event.dataTransfer.setData('text/plain', 'menu:' + draggedId); } catch (x) {}
-            }
-        });
-        item.addEventListener('dragend', function() {
-            item.classList.remove('is-dragging');
-            clearDropState();
-            draggedItem = null;
-            draggedId = 0;
-        });
     }
 
     function bindZone(zone) {
@@ -781,22 +831,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (x) {}
             }
             var node = draggedItem || (id ? document.querySelector('.menu-builder-item[data-id="' + id + '"]') : null);
+            var moved = false;
             if (node) {
                 // Cegah induk masuk ke anaknya sendiri.
                 if (node.contains(zone)) { clearDropState(); return; }
                 if (placeholder.parentNode === zone) zone.insertBefore(node, placeholder);
                 else zone.appendChild(node);
+                moved = true;
             }
+            document.body.classList.remove('menu-dragging');
             clearDropState();
             draggedItem = null;
             draggedId = 0;
+            markZonesWithChildren();
+            if (moved) autoSaveMenuOrder(true);
         });
     }
 
     document.querySelectorAll('.menu-builder-item').forEach(bindDrag);
     document.querySelectorAll('.menu-dropzone').forEach(bindZone);
+    markZonesWithChildren();
+    bindPointerDrag();
+    // Pengaman: lepas tanda drag bila mouse dilepas di luar item.
+    document.addEventListener('mouseup', function() {
+        document.querySelectorAll('.menu-builder-item').forEach(function(it) {
+            it._armed = false;
+        });
+    });
 
-    // Panah naik/turun sebaris: geser dalam zona yang sama.
+    // Panah naik/turun sebaris: geser dalam zona yang sama, lalu simpan otomatis.
     document.querySelectorAll('.menu-builder-item').forEach(function(item) {
         item.querySelectorAll('.menu-nav').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
@@ -809,9 +872,135 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (i === -1 || j < 0 || j >= sibs.length) return;
                 if (btn.getAttribute('data-nav') === 'up') zone.insertBefore(item, sibs[j]);
                 else zone.insertBefore(sibs[j], item);
+                markZonesWithChildren();
+                autoSaveMenuOrder(true);
             });
         });
     });
+
+    function bindPointerDrag() {
+        var activeItem = null;
+        var activePointerId = null;
+        var ghost = null;
+        var startX = 0;
+        var startY = 0;
+        var grabDX = 0;
+        var grabDY = 0;
+        var dragging = false;
+
+        function nearestZone(item, x, y) {
+            var bestZone = item.parentNode && item.parentNode.classList && item.parentNode.classList.contains('menu-dropzone')
+                ? item.parentNode
+                : null;
+            var bestDistance = Infinity;
+            document.querySelectorAll('.menu-dropzone').forEach(function(zone) {
+                if (item.contains(zone)) return;
+                var rect = zone.getBoundingClientRect();
+                var dx = Math.max(rect.left - x, 0, x - (rect.right || rect.left));
+                var dy = Math.max(rect.top - y, 0, y - (rect.bottom || rect.top));
+                var distance = Math.hypot(dx, dy);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestZone = zone;
+                }
+            });
+            return bestZone;
+        }
+
+        function startPointerDrag(x, y) {
+            var rect = activeItem.getBoundingClientRect();
+            grabDX = Math.max(0, Math.min(x - rect.left, rect.width || 1));
+            grabDY = Math.max(0, Math.min(y - rect.top, rect.height || 1));
+            dragging = true;
+            draggedItem = activeItem;
+            draggedId = parseInt(activeItem.getAttribute('data-id') || '0', 10) || 0;
+            document.body.classList.add('menu-dragging');
+            activeItem.classList.add('is-dragging');
+            activeItem.classList.add('is-pointer-dragging');
+            ghost = activeItem.cloneNode(true);
+            ghost.removeAttribute('draggable');
+            ghost.classList.add('menu-pointer-ghost');
+            ghost.classList.remove('is-dragging', 'is-pointer-dragging');
+            ghost.style.width = rect.width + 'px';
+            document.body.appendChild(ghost);
+            moveGhost(x, y);
+        }
+
+        function moveGhost(x, y) {
+            if (!ghost) return;
+            ghost.style.transform = 'translate(' + (x - grabDX) + 'px,' + (y - grabDY) + 'px)';
+        }
+
+        function cleanupPointer(e) {
+            if (!activeItem) return;
+            if (e && typeof activePointerId === 'number' && e.pointerId !== activePointerId) return;
+            var moved = false;
+            if (dragging && placeholder.parentNode) {
+                var targetZone = placeholder.parentNode;
+                if (!activeItem.contains(targetZone)) {
+                    targetZone.insertBefore(activeItem, placeholder);
+                    moved = true;
+                }
+            }
+            document.body.classList.remove('menu-dragging');
+            clearDropState();
+            if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+            activeItem.classList.remove('is-dragging');
+            activeItem.classList.remove('is-pointer-dragging');
+            if (moved) {
+                markZonesWithChildren();
+                autoSaveMenuOrder(true);
+            }
+            dragging = false;
+            activeItem = null;
+            activePointerId = null;
+            ghost = null;
+            draggedItem = null;
+            draggedId = 0;
+        }
+
+        document.querySelectorAll('.menu-builder-item .menu-drag-handle').forEach(function(handle) {
+            if (handle._menuPointerBound) return;
+            handle._menuPointerBound = true;
+            handle.addEventListener('pointerdown', function(e) {
+                if (activeItem) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                var item = handle.closest('.menu-builder-item');
+                if (!item) return;
+                activeItem = item;
+                activePointerId = e.pointerId;
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+        });
+
+        document.addEventListener('pointermove', function(e) {
+            if (!activeItem || (typeof activePointerId === 'number' && e.pointerId !== activePointerId)) return;
+            if (!dragging) {
+                if (Math.hypot(e.clientX - startX, e.clientY - startY) < 6) return;
+                startPointerDrag(e.clientX, e.clientY);
+            }
+            if (e.cancelable) e.preventDefault();
+            moveGhost(e.clientX, e.clientY);
+            var zone = nearestZone(activeItem, e.clientX, e.clientY);
+            document.querySelectorAll('.menu-dropzone.is-over').forEach(function(z) {
+                if (z !== zone) z.classList.remove('is-over');
+            });
+            if (!zone) { if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder); return; }
+            zone.classList.add('is-over');
+            var afterElement = getDragAfterElement(zone, e.clientY);
+            if (afterElement === activeItem) afterElement = null;
+            if (afterElement == null) {
+                if (placeholder.nextSibling !== null || placeholder.parentNode !== zone) zone.appendChild(placeholder);
+            } else if (placeholder.parentNode !== zone || placeholder.nextSibling !== afterElement) {
+                zone.insertBefore(placeholder, afterElement);
+            }
+        }, { passive: false });
+
+        ['pointerup', 'pointercancel'].forEach(function(evt) {
+            document.addEventListener(evt, cleanupPointer);
+        });
+    }
 
     function collectMenuOrder(zone, parentId, rows) {
         Array.prototype.slice.call(zone.children).forEach(function(item, index) {

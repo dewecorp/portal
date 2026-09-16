@@ -273,7 +273,21 @@ function formatHariTanggalIndonesia($tanggal) {
             bottom: 0;
             width: 260px;
             overflow-y: auto;
+            overflow-x: hidden;
             overscroll-behavior: contain;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,.35) transparent;
+            scrollbar-gutter: stable;
+        }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,.28);
+            border-radius: 999px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.45); }
             background: var(--admin-nav-gradient);
             border-right: 1px solid rgba(255,255,255,0.16);
             padding: 1.25rem 1rem;
@@ -811,18 +825,57 @@ function formatHariTanggalIndonesia($tanggal) {
         .gap-4 { gap: 1rem; }
         .gap-5 { gap: 1.25rem; }
         .stat-grid { display: grid; gap: 0.65rem; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; min-width: 0; }
-        .quick-grid, .two-grid, .chart-grid, .form-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; }
+        .dashboard-duo { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; align-items: stretch; }
+        .dashboard-duo > * { min-width: 0; height: 100%; }
+        .dashboard-duo .card-body { height: 100%; display: flex; flex-direction: column; }
+        .quick-grid .quick-card {
+            height: 100%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        .quick-grid .quick-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+        .quick-grid .quick-icon { flex: 0 0 auto; }
+        .quick-grid .quick-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .quick-grid .quick-title {
+            margin-top: 0.75rem;
+            overflow-wrap: anywhere;
+        }
+        .quick-grid .quick-desc {
+            margin-top: 0.25rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .quick-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; min-width: 0; }
+        .two-grid, .chart-grid, .form-grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; }
         .stat-grid > *, .quick-grid > *, .two-grid > *, .chart-grid > *, .form-grid > * { min-width: 0; }
         .form-actions { grid-column: 1 / -1; }
         .editor-grid { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; }
         @media (min-width: 640px) {
-            .quick-grid, .two-grid, .chart-grid, .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .two-grid, .chart-grid, .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) {
+            .dashboard-duo { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
         }
         @media (min-width: 1024px) {
             .stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            .quick-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
-            .quick-grid > a { padding: 1rem !important; }
-            .quick-grid > a .mt-4 { margin-top: 0.75rem !important; }
             .editor-grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
         }
         html { overflow-x: visible; }

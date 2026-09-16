@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<div class="dashboard-duo mb-6">
 <div class="card">
     <div class="card-body">
         <div class="mb-5 flex items-start justify-between gap-4">
@@ -157,48 +158,47 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="rounded-full bg-teal-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-teal-700">4 Aksi</span>
         </div>
         <div class="quick-grid">
-            <a href="berita?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-100">
-                <div class="flex items-start justify-between">
-                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-200/60"><?php echo ui_icon('plus', 'w-5 h-5'); ?></span>
-                    <span class="text-xs font-black uppercase tracking-wide text-teal-600">Editor</span>
+            <a href="berita?action=add" class="quick-card group rounded-2xl border border-slate-200 bg-white transition duration-200 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-xl hover:shadow-teal-100">
+                <div class="quick-card-top">
+                    <span class="quick-icon grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg shadow-teal-200/60"><?php echo ui_icon('plus', 'w-5 h-5'); ?></span>
+                    <span class="quick-label text-xs font-black uppercase tracking-wide text-teal-600">Editor</span>
                 </div>
-                <div class="mt-4 font-extrabold text-slate-950">Tulis berita baru</div>
-                <div class="mt-1 text-sm text-slate-500">Buat artikel, atur kategori, dan publikasi sekaligus.</div>
+                <div class="quick-title font-extrabold text-slate-950">Tulis berita baru</div>
+                <div class="quick-desc text-sm text-slate-500">Buat artikel, atur kategori, dan publikasi sekaligus.</div>
             </a>
-            <a href="menu?action=add" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100">
-                <div class="flex items-start justify-between">
-                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-200/60"><?php echo ui_icon('panel', 'w-5 h-5'); ?></span>
-                    <span class="text-xs font-black uppercase tracking-wide text-sky-600">Struktur</span>
+            <a href="menu?action=add" class="quick-card group rounded-2xl border border-slate-200 bg-white transition duration-200 hover:-translate-y-1.5 hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100">
+                <div class="quick-card-top">
+                    <span class="quick-icon grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-200/60"><?php echo ui_icon('panel', 'w-5 h-5'); ?></span>
+                    <span class="quick-label text-xs font-black uppercase tracking-wide text-sky-600">Struktur</span>
                 </div>
-                <div class="mt-4 font-extrabold text-slate-950">Tambah menu navigasi</div>
-                <div class="mt-1 text-sm text-slate-500">Susun kategori dan struktur halaman depan.</div>
+                <div class="quick-title font-extrabold text-slate-950">Tambah menu navigasi</div>
+                <div class="quick-desc text-sm text-slate-500">Susun kategori dan struktur halaman depan.</div>
             </a>
-            <a href="kategori" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100">
-                <div class="flex items-start justify-between">
-                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-200/60"><?php echo ui_icon('layers', 'w-5 h-5'); ?></span>
-                    <span class="text-xs font-black uppercase tracking-wide text-violet-600"><?php echo $totalKategori; ?> Item</span>
+            <a href="kategori" class="quick-card group rounded-2xl border border-slate-200 bg-white transition duration-200 hover:-translate-y-1.5 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-100">
+                <div class="quick-card-top">
+                    <span class="quick-icon grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-200/60"><?php echo ui_icon('layers', 'w-5 h-5'); ?></span>
+                    <span class="quick-label text-xs font-black uppercase tracking-wide text-violet-600"><?php echo $totalKategori; ?> Item</span>
                 </div>
-                <div class="mt-4 font-extrabold text-slate-950">Kelola kategori berita</div>
-                <div class="mt-1 text-sm text-slate-500">Tambah, ubah, atau hapus kategori berita.</div>
+                <div class="quick-title font-extrabold text-slate-950">Kelola kategori berita</div>
+                <div class="quick-desc text-sm text-slate-500">Tambah, ubah, atau hapus kategori berita.</div>
             </a>
-            <a href="settings" class="group rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100">
-                <div class="flex items-start justify-between">
-                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200/60"><?php echo ui_icon('sliders', 'w-5 h-5'); ?></span>
-                    <span class="text-xs font-black uppercase tracking-wide text-amber-600">Identitas</span>
+            <a href="settings" class="quick-card group rounded-2xl border border-slate-200 bg-white transition duration-200 hover:-translate-y-1.5 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-100">
+                <div class="quick-card-top">
+                    <span class="quick-icon grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200/60"><?php echo ui_icon('sliders', 'w-5 h-5'); ?></span>
+                    <span class="quick-label text-xs font-black uppercase tracking-wide text-amber-600">Identitas</span>
                 </div>
-                <div class="mt-4 font-extrabold text-slate-950">Perbarui identitas portal</div>
-                <div class="mt-1 text-sm text-slate-500">Ubah nama, tagline, dan logo portal.</div>
+                <div class="quick-title font-extrabold text-slate-950">Perbarui identitas portal</div>
+                <div class="quick-desc text-sm text-slate-500">Ubah nama, tagline, dan logo portal.</div>
             </a>
         </div>
     </div>
 </div>
 
-<section class="mt-8 mb-6 card">
+<section class="card">
     <div class="card-body">
-        <div class="mb-6 flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div class="mb-4 flex items-center justify-between gap-4 border-b border-slate-100 pb-3">
             <div>
-                <h2 class="h6 mb-1">Aktivitas Admin</h2>
-                <p class="text-muted small mb-0">Catatan CRUD, login, dan logout secara real-time. Otomatis terhapus setelah 24 jam.</p>
+                <h2 class="h6 mb-0">Aktivitas Admin</h2>
             </div>
             <?php if ($activityCount > 0): ?>
                 <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-rose-600 border border-rose-100 shadow-sm"><?php echo $activityCount; ?> Aktivitas</span>
@@ -207,12 +207,13 @@ document.addEventListener('DOMContentLoaded', function() {
         <?php if (empty($logs)): ?>
             <div class="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-semibold text-slate-400">Belum ada aktivitas tercatat hari ini.</div>
         <?php else: ?>
-            <div class="relative ml-2 pl-12 pr-2 space-y-8 py-2" style="max-height:420px;overflow-y:auto;">
+            <div class="relative ml-2 pl-12 pr-2 space-y-5 py-1" style="max-height:320px;overflow-y:auto;">
                 <div class="absolute left-[19px] top-3 bottom-3 w-0.5 bg-slate-100 rounded" aria-hidden="true"></div>
                 <?php foreach ($logs as $log):
                     $action = $log['action'] ?? '';
                     $details = htmlspecialchars($log['details'] ?? '');
                     $time = time_ago($log['created_at'] ?? '');
+                    $dateTime = !empty($log['created_at']) ? date('d M Y H:i', strtotime($log['created_at'])) : '';
                     $badge = match ($action) {
                         'login' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                         'logout' => 'bg-slate-50 text-slate-600 border-slate-200',
@@ -251,9 +252,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="text-xs font-bold text-slate-400"><?php echo $time; ?></span>
                             </div>
                             <div class="text-sm font-bold text-slate-900 break-words"><?php echo $details; ?></div>
-                            <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                                <?php echo ui_icon('user', 'w-3 h-3'); ?>
-                                <?php echo htmlspecialchars($log['admin_username'] ?? 'Admin'); ?>
+                            <div class="flex items-center gap-2 flex-wrap text-[11px] font-semibold text-slate-400">
+                                <span class="flex items-center gap-1.5">
+                                    <?php echo ui_icon('user', 'w-3 h-3'); ?>
+                                    <?php echo htmlspecialchars($log['admin_username'] ?? 'Admin'); ?>
+                                </span>
+                                <?php if ($dateTime !== ''): ?>
+                                <span class="flex items-center gap-1.5">
+                                    <?php echo ui_icon('cal', 'w-3 h-3'); ?>
+                                    <?php echo htmlspecialchars($dateTime); ?>
+                                </span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -262,6 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <?php endif; ?>
     </div>
 </section>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
