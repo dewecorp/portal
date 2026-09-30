@@ -196,22 +196,15 @@
         });
     })();
     
-    // Admin initial loader: tampil dulu setiap halaman admin dibuka, lalu sembunyi
+    // Admin loader: tampil hanya saat klik tautan navigasi (pindah laman)
     (function() {
         var loader = document.getElementById('adminLoader');
         if (!loader) return;
         var show = function() { loader.classList.add('is-show'); };
         var hide = function() { loader.classList.remove('is-show'); };
-        var hidden = false;
-        var hideOnce = function() {
-            if (hidden) return;
-            hidden = true;
-            hide();
-        };
-        window.addEventListener('load', function() {
-            setTimeout(hideOnce, 500);
-        });
-        setTimeout(hideOnce, 2500);
+        hide();
+        window.addEventListener('load', hide);
+        window.addEventListener('pageshow', hide);
         document.addEventListener('click', function(e) {
             if (e.defaultPrevented) return;
             var a = e.target.closest ? e.target.closest('a[href]') : null;
@@ -221,10 +214,6 @@
             if (!href || href.charAt(0) === '#' || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
             if (href.indexOf('javascript:') === 0) return;
             show();
-        });
-        document.addEventListener('submit', function() { show(); }, true);
-        window.addEventListener('pageshow', function(e) {
-            if (e.persisted) hideOnce();
         });
     })();
 

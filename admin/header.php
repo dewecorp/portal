@@ -1067,7 +1067,7 @@ function formatHariTanggalIndonesia($tanggal) {
     </style>
 </head>
 <body>
-<div class="admin-loader is-show" id="adminLoader" aria-hidden="true">
+<div class="admin-loader" id="adminLoader" aria-hidden="true">
     <div class="admin-loader-ring">
         <?php if (!empty($settings['logo_path'])): ?>
             <img class="admin-loader-logo" src="../<?php echo htmlspecialchars($settings['logo_path']); ?>" alt="">
