@@ -213,13 +213,15 @@
         });
         setTimeout(hideOnce, 2500);
         document.addEventListener('click', function(e) {
+            if (e.defaultPrevented) return;
             var a = e.target.closest ? e.target.closest('a[href]') : null;
             if (!a) return;
+            if (a.hasAttribute('data-modal-open') || a.hasAttribute('data-modal-close') || a.closest('[data-modal-open]') || a.closest('[data-modal-close]')) return;
             var href = a.getAttribute('href') || '';
-            if (href.charAt(0) === '#' || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+            if (!href || href.charAt(0) === '#' || a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
             if (href.indexOf('javascript:') === 0) return;
             show();
-        }, true);
+        });
         document.addEventListener('submit', function() { show(); }, true);
         window.addEventListener('pageshow', function(e) {
             if (e.persisted) hideOnce();
