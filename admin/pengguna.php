@@ -183,25 +183,22 @@ if ($error) {
 }
 ?>
 
-<main>
-    <div class="mb-6 d-flex justify-content-between align-items-center gap-3" style="flex-wrap: wrap;">
-        <div>
-            <h1 class="h4 mb-1">Manajemen Pengguna</h1>
-            <p class="text-muted small mb-0">Kelola pengguna dan role mereka</p>
-        </div>
-        <?php if ($action !== 'add' && $action !== 'edit'): ?>
-        <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-3" id="btnTambahPengguna" style="white-space: nowrap;">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"></path>
-            </svg>
-            <span>Tambah Pengguna</span>
-        </button>
-        <?php endif; ?>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Manajemen Pengguna</h1>
+        <p class="text-muted small mb-0">Kelola pengguna dan role mereka</p>
     </div>
+    <?php if ($action !== 'add' && $action !== 'edit'): ?>
+    <a href="pengguna?action=add" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+        <?php echo ui_icon('plus', 'w-4 h-4'); ?> Tambah Pengguna
+    </a>
+    <?php endif; ?>
+</div>
 
-    <?php if ($action === 'add' || $action === 'edit'): ?>
-    <div class="border rounded p-5 bg-white mb-6">
-        <h2 class="h6 mb-4"><?php echo $action === 'add' ? 'Tambah Pengguna Baru' : 'Edit Pengguna'; ?></h2>
+<?php if ($action === 'add' || $action === 'edit'): ?>
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+        <h2 class="h6 mb-3"><?php echo $action === 'add' ? 'Tambah Pengguna Baru' : 'Edit Pengguna'; ?></h2>
         <form method="post" class="form-grid">
             <div class="form-group">
                 <label class="form-label">Nama Lengkap *</label>
@@ -231,13 +228,13 @@ if ($error) {
             </div>
 
             <div class="form-group">
-                <label class="form-check">
+                <label class="form-check form-switch mt-2">
                     <input type="checkbox" name="is_active" class="form-check-input" <?php echo ($editUser['is_active'] ?? 1) ? 'checked' : ''; ?>>
-                    <span>Aktif</span>
+                    <span class="form-check-label">Aktif</span>
                 </label>
             </div>
 
-            <div class="form-actions">
+            <div class="form-actions mt-3">
                 <button type="submit" class="btn btn-primary">
                     <?php echo $action === 'add' ? 'Tambah' : 'Simpan'; ?>
                 </button>
@@ -245,64 +242,73 @@ if ($error) {
             </div>
         </form>
     </div>
-    <?php else: ?>
+</div>
+<?php else: ?>
 
-    <div class="border rounded overflow-hidden bg-white">
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h6 mb-0">Daftar Pengguna</h2>
+        </div>
         <div class="table-responsive">
-            <table class="table">
+            <table class="table align-middle table-sm">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 25%;">Nama</th>
-                        <th style="width: 25%;">Username</th>
-                        <th style="width: 20%;">Role</th>
-                        <th style="width: 15%;">Status</th>
-                        <th style="width: 10%; text-align: center;">Aksi</th>
+                        <th width="50">#</th>
+                        <th>Nama</th>
+                        <th>Username</th>
+                        <th width="150">Role</th>
+                        <th width="120">Status</th>
+                        <th width="120" class="text-end">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php if (empty($users)): ?>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">Belum ada pengguna.</td>
+                    </tr>
+                    <?php else: ?>
                     <?php foreach ($users as $i => $u): ?>
                     <tr>
                         <td><?php echo $i + 1; ?></td>
-                        <td><?php echo htmlspecialchars($u['nama']); ?></td>
-                        <td><code style="background: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 0.3rem; font-size: 0.85rem;"><?php echo htmlspecialchars($u['username']); ?></code></td>
+                        <td class="fw-semibold"><?php echo htmlspecialchars($u['nama']); ?></td>
+                        <td><code><?php echo htmlspecialchars($u['username']); ?></code></td>
                         <td>
-                            <span class="badge" style="background: <?php 
-                                echo $u['role'] === 'administrator' ? '#fef3c7; color: #92400e;' : 
-                                     ($u['role'] === 'author' ? '#d1fae5; color: #065f46;' : '#e0e7ff; color: #3730a3;');
-                            ?>">
-                                <?php echo $roleLabels[$u['role']] ?? 'Unknown'; ?>
-                            </span>
+                            <?php if ($u['role'] === 'administrator'): ?>
+                                <span class="badge bg-warning-subtle text-warning">Administrator</span>
+                            <?php elseif ($u['role'] === 'author'): ?>
+                                <span class="badge bg-success-subtle text-success">Author</span>
+                            <?php else: ?>
+                                <span class="badge bg-info-subtle text-info"><?php echo htmlspecialchars($roleLabels[$u['role']] ?? $u['role']); ?></span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <?php if ($u['is_active']): ?>
-                            <span class="badge" style="background: #d1fae5; color: #065f46;">Aktif</span>
+                                <span class="badge bg-success-subtle text-success">Aktif</span>
                             <?php else: ?>
-                            <span class="badge" style="background: #fee2e2; color: #991b1b;">Nonaktif</span>
+                                <span class="badge bg-danger-subtle text-danger">Nonaktif</span>
                             <?php endif; ?>
                         </td>
-                        <td style="text-align: center;">
-                            <div class="d-flex gap-3" style="justify-content: center;">
-                                <a href="pengguna?action=edit&id=<?php echo $u['id']; ?>" class="btn-icon btn-edit" title="Edit">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2 justify-content-end">
+                                <a href="pengguna?action=edit&id=<?php echo $u['id']; ?>" class="btn-icon btn-edit" title="Edit" aria-label="Edit">
+                                    <?php echo ui_icon('edit', 'w-5 h-5'); ?>
                                 </a>
                                 <?php if ($u['id'] !== 1): ?>
-                                <button type="button" class="btn-icon btn-del" onclick="hapusPengguna(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['username'])); ?>')" title="Hapus">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
+                                <button type="button" class="btn-icon btn-del" onclick="hapusPengguna(<?php echo $u['id']; ?>, '<?php echo htmlspecialchars(addslashes($u['username'])); ?>')" title="Hapus" aria-label="Hapus">
+                                    <?php echo ui_icon('trash', 'w-5 h-5'); ?>
                                 </button>
                                 <?php endif; ?>
                             </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
+</div>
 
      <style>
         .form-group {
@@ -388,6 +394,5 @@ if ($error) {
     </script>
 
     <?php endif; ?>
-</main>
 
 <?php include __DIR__ . '/footer.php'; ?>
